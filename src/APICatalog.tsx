@@ -6,7 +6,7 @@ type APIEntry = {
   name: string
   category: string
   description: string
-  auth: 'Tanpa kunci' | 'API key' | 'OAuth / akun'
+  auth: 'Tanpa kunci' | 'API key' | 'OAuth / akun' | 'Perlu verifikasi'
   cost: 'Gratis' | 'Freemium' | 'Perlu evaluasi'
   useCase: string
   docs: string
@@ -15,7 +15,7 @@ type APIEntry = {
 
 const entries: APIEntry[] = [
   { name: 'Open-Meteo', category: 'Cuaca & Lapangan', description: 'Prakiraan cuaca dan data historis untuk koordinasi pekerjaan luar ruang.', auth: 'Tanpa kunci', cost: 'Gratis', useCase: 'Widget cuaca lokasi proyek dan perencanaan inspeksi.', docs: 'https://open-meteo.com/en/docs', suitability: 'Direkomendasikan untuk evaluasi' },
-  { name: 'BMKG', category: 'Cuaca & Lapangan', description: 'Sumber informasi cuaca dan peringatan resmi Indonesia; integrasi harus mengikuti kanal dan ketentuan akses yang berlaku.', auth: 'Perlu evaluasi', cost: 'Perlu evaluasi', useCase: 'Peringatan cuaca ekstrem untuk tim proyek Indonesia.', docs: 'https://www.bmkg.go.id/', suitability: 'Perlu pemeriksaan kebijakan' } as APIEntry,
+  { name: 'BMKG', category: 'Cuaca & Lapangan', description: 'Sumber informasi cuaca dan peringatan resmi Indonesia; integrasi harus mengikuti kanal dan ketentuan akses yang berlaku.', auth: 'Perlu verifikasi', cost: 'Perlu evaluasi', useCase: 'Peringatan cuaca ekstrem untuk tim proyek Indonesia.', docs: 'https://www.bmkg.go.id/', suitability: 'Perlu pemeriksaan kebijakan' },
   { name: 'OpenStreetMap', category: 'Peta & Lokasi', description: 'Data peta terbuka yang dapat menjadi dasar konteks lokasi proyek.', auth: 'Tanpa kunci', cost: 'Gratis', useCase: 'Peta konteks lokasi; pilih penyedia tile sesuai kebijakan penggunaan.', docs: 'https://www.openstreetmap.org/copyright', suitability: 'Perlu pemeriksaan kebijakan' },
   { name: 'Nominatim', category: 'Peta & Lokasi', description: 'Geocoding dan pencarian lokasi berbasis OpenStreetMap.', auth: 'Tanpa kunci', cost: 'Gratis', useCase: 'Konversi alamat lokasi proyek menjadi koordinat pada skala rendah.', docs: 'https://nominatim.org/release-docs/latest/api/Overview/', suitability: 'Perlu pemeriksaan kebijakan' },
   { name: 'OpenAQ', category: 'Lingkungan', description: 'Data kualitas udara dari jaringan pemantauan yang tersedia.', auth: 'API key', cost: 'Gratis', useCase: 'Konteks kualitas udara untuk lokasi proyek dan paparan debu.', docs: 'https://docs.openaq.org/', suitability: 'Direkomendasikan untuk evaluasi' },
@@ -63,7 +63,7 @@ export default function APICatalog() {
     <section className="api-controls">
       <label className="api-search"><Search size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Cari API, kategori, atau kebutuhan..." /></label>
       <select value={category} onChange={e => setCategory(e.target.value)} aria-label="Filter kategori">{categories.map(c => <option key={c}>{c}</option>)}</select>
-      <select value={auth} onChange={e => setAuth(e.target.value)} aria-label="Filter metode akses">{['Semua akses', 'Tanpa kunci', 'API key', 'OAuth / akun'].map(a => <option key={a}>{a}</option>)}</select>
+      <select value={auth} onChange={e => setAuth(e.target.value)} aria-label="Filter metode akses">{['Semua akses', 'Tanpa kunci', 'API key', 'OAuth / akun', 'Perlu verifikasi'].map(a => <option key={a}>{a}</option>)}</select>
       <label className="api-free-filter"><input type="checkbox" checked={showFree} onChange={e => setShowFree(e.target.checked)}/> Hanya berlabel gratis</label>
     </section>
 
