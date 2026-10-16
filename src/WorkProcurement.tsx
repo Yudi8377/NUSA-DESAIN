@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownToLine, CalendarClock, CheckCircle2, CirclePlus, ClipboardList, PackageCheck, Search, Trash2, Truck } from 'lucide-react'
+import { ArrowDownToLine, CirclePlus, ClipboardList, PackageCheck, Search, Trash2 } from 'lucide-react'
 import './WorkProcurement.css'
 
 type Task = { id: number; title: string; project: string; owner: string; discipline: string; priority: string; status: string; due: string; estimate: number; notes: string }
