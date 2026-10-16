@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowDownToLine, Building2, Check, CirclePlus, FileCheck2, FileText, Filter, HardHat, Search, Trash2, WalletCards } from 'lucide-react'
 import './OperationsModules.css'
+import BOQBuilder from './BOQBuilder'
 
 type Lead = { id: number; name: string; company: string; service: string; value: number; stage: string; owner: string }
 type Project = { id: number; name: string; client: string; location: string; type: string; stage: string; progress: number; budget: number; due: string }
@@ -88,31 +89,7 @@ export function ConstructionProjectsModule() {
   </div>
 }
 
-export function BudgetModule() {
-  const [lines, setLines] = useLocalList<BudgetLine>('rab-lines', initialBudget)
-  const [project, setProject] = useState('Gedung Perkantoran Nusantara')
-  const [tax, setTax] = useState(11)
-  const [overhead, setOverhead] = useState(5)
-  const [contingency, setContingency] = useState(3)
-  const [newLine, setNewLine] = useState({ code: '', description: '', unit: 'ls', volume: '1', price: '' })
-  const [showForm, setShowForm] = useState(false)
-  const subtotal = useMemo(() => lines.reduce((sum, x) => sum + x.volume * x.price, 0), [lines])
-  const overheadValue = subtotal * overhead / 100
-  const contingencyValue = subtotal * contingency / 100
-  const taxValue = (subtotal + overheadValue + contingencyValue) * tax / 100
-  const total = subtotal + overheadValue + contingencyValue + taxValue
-  const submit = (e: FormEvent) => { e.preventDefault(); if (!newLine.description.trim()) return; setLines([...lines, { id: Date.now(), code: newLine.code || 'ITEM', description: newLine.description, unit: newLine.unit, volume: Number(newLine.volume) || 0, price: Number(newLine.price) || 0 }]); setNewLine({ code: '', description: '', unit: 'ls', volume: '1', price: '' }); setShowForm(false) }
-  return <div className="ops-module">
-    <PageHead eyebrow="COST PLANNING" title="RAB & Anggaran" description="Susun kuantitas, harga satuan, biaya tidak langsung, cadangan, dan estimasi anggaran proyek." action={<button className="ops-primary" onClick={() => setShowForm(!showForm)}><CirclePlus size={16}/> Tambah item</button>} />
-    <div className="ops-budget-project"><label>Proyek yang dihitung<select value={project} onChange={e => setProject(e.target.value)}><option>Gedung Perkantoran Nusantara</option><option>Residensial Kemang</option><option>Gudang Logistik</option><option>Proyek baru / belum ditetapkan</option></select></label><div className="ops-budget-tag"><WalletCards size={17}/><span>Estimasi awal · dapat disunting</span></div></div>
-    <div className="ops-stats"><Stat label="Subtotal pekerjaan" value={money(subtotal)} note={lines.length + ' item biaya'}/><Stat label="Overhead" value={money(overheadValue)} note={overhead + '% dari subtotal'}/><Stat label="Cadangan risiko" value={money(contingencyValue)} note={contingency + '% dari subtotal'}/><Stat label="Total estimasi" value={money(total)} note="Termasuk pajak asumsi"/></div>
-    <div className="ops-budget-controls"><label>Overhead (%)<input type="number" min="0" max="100" value={overhead} onChange={e => setOverhead(Math.max(0, Number(e.target.value)))}/></label><label>Cadangan (%)<input type="number" min="0" max="100" value={contingency} onChange={e => setContingency(Math.max(0, Number(e.target.value)))}/></label><label>Pajak asumsi (%)<input type="number" min="0" max="100" value={tax} onChange={e => setTax(Math.max(0, Number(e.target.value)))}/></label><button className="ops-secondary" onClick={() => exportCsv('nusa-design-rab.csv', [['Kode','Uraian','Satuan','Volume','Harga satuan','Jumlah'], ...lines.map(x => [x.code,x.description,x.unit,x.volume,x.price,x.volume*x.price]), ['','','','','Subtotal',subtotal], ['','','','','Overhead',overheadValue], ['','','','','Cadangan',contingencyValue], ['','','','','Pajak asumsi',taxValue], ['','','','','TOTAL ESTIMASI',total]])}><ArrowDownToLine size={15}/> Ekspor RAB</button></div>
-    {showForm && <form className="ops-form" onSubmit={submit}><div className="ops-form-title">Item pekerjaan baru <span>Masukkan volume dan harga satuan</span></div><div className="ops-form-grid"><label>Kode<input value={newLine.code} onChange={e => setNewLine({ ...newLine, code: e.target.value })} placeholder="E.01"/></label><label>Uraian pekerjaan<input required value={newLine.description} onChange={e => setNewLine({ ...newLine, description: e.target.value })} placeholder="Nama item pekerjaan"/></label><label>Satuan<select value={newLine.unit} onChange={e => setNewLine({ ...newLine, unit: e.target.value })}>{['ls','m','m²','m³','kg','unit','hari','orang'].map(u => <option key={u}>{u}</option>)}</select></label><label>Volume<input type="number" min="0" step="any" value={newLine.volume} onChange={e => setNewLine({ ...newLine, volume: e.target.value })}/></label><label>Harga satuan (Rp)<input type="number" min="0" value={newLine.price} onChange={e => setNewLine({ ...newLine, price: e.target.value })}/></label></div><div className="ops-form-actions"><button type="button" className="ops-secondary" onClick={() => setShowForm(false)}>Batal</button><button className="ops-primary" type="submit">Tambahkan item</button></div></form>}
-    <div className="ops-table-wrap"><table className="ops-table ops-rab-table"><thead><tr><th>Kode</th><th>Uraian pekerjaan</th><th>Satuan</th><th>Volume</th><th>Harga satuan</th><th>Jumlah</th><th></th></tr></thead><tbody>{lines.map(x => <tr key={x.id}><td><input className="ops-cell-input ops-code-input" value={x.code} aria-label="Kode item" onChange={e => setLines(lines.map(l => l.id === x.id ? { ...l, code: e.target.value } : l))}/></td><td><input className="ops-cell-input ops-desc-input" value={x.description} aria-label="Uraian item" onChange={e => setLines(lines.map(l => l.id === x.id ? { ...l, description: e.target.value } : l))}/></td><td><select className="ops-cell-input" value={x.unit} aria-label="Satuan item" onChange={e => setLines(lines.map(l => l.id === x.id ? { ...l, unit: e.target.value } : l))}>{['ls','m','m²','m³','kg','unit','hari','orang'].map(u => <option key={u}>{u}</option>)}</select></td><td><input className="ops-cell-input ops-number-input" type="number" min="0" step="any" value={x.volume} aria-label="Volume item" onChange={e => setLines(lines.map(l => l.id === x.id ? { ...l, volume: Math.max(0, Number(e.target.value)) } : l))}/></td><td><input className="ops-cell-input ops-number-input" type="number" min="0" value={x.price} aria-label="Harga satuan" onChange={e => setLines(lines.map(l => l.id === x.id ? { ...l, price: Math.max(0, Number(e.target.value)) } : l))}/></td><td className="ops-money">{money(x.volume*x.price)}</td><td><button className="ops-icon-danger" aria-label="Hapus item" onClick={() => setLines(lines.filter(l => l.id !== x.id))}><Trash2 size={15}/></button></td></tr>)}</tbody></table></div>
-    <div className="ops-total-panel"><div><span>Subtotal pekerjaan</span><b>{money(subtotal)}</b></div><div><span>Overhead ({overhead}%)</span><b>{money(overheadValue)}</b></div><div><span>Cadangan risiko ({contingency}%)</span><b>{money(contingencyValue)}</b></div><div><span>Pajak asumsi ({tax}%)</span><b>{money(taxValue)}</b></div><div className="ops-grand-total"><span>Total estimasi RAB</span><strong>{money(total)}</strong></div></div>
-    <p className="ops-note">Contoh item dan persentase hanyalah simulasi, bukan harga standar resmi. Verifikasi AHSP/HSPK daerah, spesifikasi, volume gambar, metode kerja, serta perlakuan PPN/ketentuan pajak sebelum RAB dipakai untuk tender atau kontrak.</p>
-  </div>
-}
+export function BudgetModule() { return <BOQBuilder /> }
 
 export function DesignDocumentsModule() {
   const [docs, setDocs] = useLocalList<DesignDoc>('design-documents', initialDocs)
