@@ -9,6 +9,7 @@ import BuildingViewer from './BuildingViewer'
 import AIStudio from './AIStudio'
 import AnatomyExplorer from './AnatomyExplorer'
 import HRManagement from './HRManagement'
+import K3Management from './K3Management'
 
 const menu = [
   { label: 'Ringkasan', icon: LayoutDashboard, active: true },
@@ -24,6 +25,7 @@ const lowerMenu = [
   { label: 'Pengadaan', icon: BriefcaseBusiness },
   { label: 'Keuangan', icon: WalletCards },
   { label: 'SDM & Payroll', icon: Users },
+  { label: 'K3 & Keselamatan', icon: HardHat },
   { label: 'Laporan & Audit', icon: Activity },
 ]
 
@@ -69,7 +71,7 @@ export default function App() {
         </header>
 
         <div className="page-content">
-          {active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : active === 'SDM & Payroll' ? <HRManagement /> : <>
+          {active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : active === 'SDM & Payroll' ? <HRManagement /> : active === 'K3 & Keselamatan' ? <K3Management /> : <>
           <section className="welcome-row">
             <div><div className="eyebrow"><span className="eyebrow-line"/> {today.toLocaleUpperCase('id-ID')}</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
             <button className="primary-button" onClick={() => window.alert('Formulir proyek baru akan diaktifkan setelah modul data dan autentikasi tersedia.')}><Plus size={17}/> Proyek baru</button>
