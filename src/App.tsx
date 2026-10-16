@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   Activity, ArrowDownRight, ArrowUpRight, Bell, Box, BriefcaseBusiness, Building2,
   CalendarDays, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, FileText,
@@ -27,7 +27,6 @@ export default function App() {
   const [floors, setFloors] = useState(5)
   const [mobileMenu, setMobileMenu] = useState(false)
   const [search, setSearch] = useState('')
-  const currentMenu = [...menu, ...lowerMenu].find((item) => item.label === active)
 
   return (
     <div className="app-shell">
@@ -112,7 +111,7 @@ export default function App() {
   )
 }
 
-function Metric({ title, value, change, positive, icon }: { title: string; value: string; change: string; positive?: boolean; icon: React.ReactNode }) {
+function Metric({ title, value, change, positive, icon }: { title: string; value: string; change: string; positive?: boolean; icon: ReactNode }) {
   return <article className="metric-card"><div className="metric-top"><span>{title}</span><div className="metric-icon">{icon}</div></div><div className="metric-value">{value}</div><div className={`metric-change ${positive ? 'positive' : ''}`}>{positive ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>} {change}</div></article>
 }
 function ActivityRow({ icon, title, detail, time, tone }: { icon: React.ReactNode; title: string; detail: string; time: string; tone: string }) {
