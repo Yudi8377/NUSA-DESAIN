@@ -8,6 +8,7 @@ import {
 import BuildingViewer from './BuildingViewer'
 import AIStudio from './AIStudio'
 import AnatomyExplorer from './AnatomyExplorer'
+import HRManagement from './HRManagement'
 
 const menu = [
   { label: 'Ringkasan', icon: LayoutDashboard, active: true },
@@ -68,7 +69,7 @@ export default function App() {
         </header>
 
         <div className="page-content">
-          {active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : <>
+          {active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : active === 'SDM & Payroll' ? <HRManagement /> : <>
           <section className="welcome-row">
             <div><div className="eyebrow"><span className="eyebrow-line"/> {today.toLocaleUpperCase('id-ID')}</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
             <button className="primary-button" onClick={() => window.alert('Formulir proyek baru akan diaktifkan setelah modul data dan autentikasi tersedia.')}><Plus size={17}/> Proyek baru</button>
