@@ -76,3 +76,8 @@ Migrasi `0003` telah diterapkan pada branch development Neon `nusa-design-dev-re
 ## Status
 
 Fondasi UI, viewer 3D, dan metadata AI Studio merupakan tahap awal, bukan klaim bahwa seluruh modul ERP telah selesai. Sebelum go-live, konfigurasikan autentikasi, API backend, kebijakan akses berbasis peran, secret deployment, penyimpanan aset privat, backup, monitoring, dan uji penerimaan.
+
+
+## K3 & Keselamatan (OpenStatus-inspired)
+
+Modul K3 menyediakan ikhtisar temuan, register insiden dan status tindak lanjut, jadwal inspeksi, hazard register, serta tab konsep pemantauan layanan digital. UI dibuat khusus untuk NUSA DESIGN; tidak menyalin source OpenStatus. Data saat ini demonstrasi lokal, belum tersimpan ke backend dan belum terhubung ke OpenStatus atau health-check nyata. Lihat [dokumen integrasi dan batasan](docs/INTEGRASI-OPENSTATUS-K3.md). Referensi: https://github.com/openstatusHQ/openstatus (AGPL-3.0).
