@@ -27,9 +27,10 @@ Repository `Najwahkr/opengl-gedung-3d-feb-unesa` telah ditinjau pada tingkat str
 8. SDM dan penggajian
 9. Pengadaan dan inventaris
 10. Viewer 3D gedung dan metadata model
-11. Audit dan pelaporan
+11. Studio AI Desain untuk menyusun brief konsep, render, video, dan materi presentasi
+12. Audit dan pelaporan
 
-## Pengembangan lokal
+## Studio AI Desain\n\nModul awal tersedia melalui menu **Studio AI Desain**. Saat ini modul menyusun dan menyalin brief generatif secara lokal; generasi gambar/video nyata belum terhubung. Baca [dokumen integrasi Open Generative AI](docs/INTEGRASI-OPEN-GENERATIVE-AI.md) untuk cakupan, atribusi, arsitektur backend, dan batasan keamanan.\n\n## Pengembangan lokal
 
 ```bash
 npm install
