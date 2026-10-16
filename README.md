@@ -41,6 +41,16 @@ Kontrak backend dan rancangan job ada di [AI Studio Backend Contract](docs/AI-ST
 
 Menu **Anatomi Bangunan** menyediakan diagram isometrik konseptual yang dapat dieksplorasi per lapisan dan diagram alur proyek. Fitur ini terinspirasi pendekatan visual repository [Anatomy](https://github.com/wheresryan22/anatomy) (MIT), tetapi UI dan diagram NUSA DESIGN ditulis khusus dan tidak menyalin kit/contoh sumber. Diagram belum terhubung ke model BIM atau data proyek. Baca [dokumen integrasi Anatomy](docs/INTEGRASI-ANATOMY.md).
 
+## Integrasi Frappe HRMS
+
+Menu **SDM & Payroll** kini memiliki halaman kerja awal NUSA DESIGN dengan ringkasan karyawan, status kehadiran, permintaan cuti, tugas HR, dan katalog modul HR. Data pada halaman ini adalah **data ilustratif**, bukan data karyawan tersimpan atau perhitungan payroll aktif.
+
+Referensi yang dianalisis: [Frappe HRMS](https://github.com/frappe/hrms), sistem HR/payroll open-source dengan modul employee lifecycle, cuti/absensi, shift, klaim biaya, rekrutmen, kinerja, pelatihan, payroll, perpajakan, kompensasi, dan analitik. Frappe HRMS menggunakan Frappe Framework (Python) dan frontend Frappe UI/Vue; karena stack ini berbeda dari NUSA DESIGN (React/TypeScript), implementasi saat ini berupa antarmuka native dan rancangan integrasi, bukan penyalinan atau pemasangan kode Frappe ke frontend.
+
+**Lisensi dan pilihan arsitektur:** Frappe HRMS memakai GNU GPL-3.0. Jika nantinya dijalankan sebagai aplikasi terpisah dan dihubungkan melalui API, pertahankan pemisahan layanan, atribusi, serta tinjau kewajiban lisensi dan distribusi sebelum menyatukan atau mendistribusikan kode. Opsi yang disarankan untuk tahap awal adalah adapter API server-to-server dengan kredensial di backend; jangan menyimpan API key di browser. Belum ada instance Frappe HRMS, kredensial API, sinkronisasi karyawan, absensi, atau payroll produksi yang dikonfigurasi.
+
+Baca [dokumen integrasi Frappe HRMS](docs/INTEGRASI-FRAPPE-HRMS.md) untuk pemetaan modul, arsitektur target, keamanan, dan rencana penerapan.
+
 ## Pengembangan lokal
 
 ```bash
