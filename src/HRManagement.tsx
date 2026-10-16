@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, Clock3, FileCheck2, GraduationCap, HeartPulse, ShieldAlert, Users, WalletCards, BriefcaseBusiness, ClipboardCheck, TrendingUp, ArrowRight, UserPlus, CalendarClock } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock3, FileCheck2, GraduationCap, ShieldAlert, Users, WalletCards, ClipboardCheck, ArrowRight, UserPlus, CalendarClock } from 'lucide-react'
 
 const people = [
   { initials: 'AR', name: 'Alya Rahma', role: 'Arsitek Madya', team: 'Desain', status: 'Hadir', tone: 'present' },
