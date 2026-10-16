@@ -13,6 +13,7 @@ import K3Management from './K3Management'
 import APICatalog from './APICatalog'
 import Accounting from './Accounting'
 import ReportsModule from './ReportsModule'
+import { TeamTasksModule, ProcurementModule } from './WorkProcurement'
 import { CRMModule, ConstructionProjectsModule, BudgetModule, DesignDocumentsModule } from './OperationsModules'
 
 const menu = [
@@ -76,7 +77,7 @@ export default function App() {
         </header>
 
         <div className="page-content">
-          {active === 'CRM & Penjualan' ? <CRMModule /> : active === 'Proyek Konstruksi' ? <ConstructionProjectsModule /> : active === 'RAB & Anggaran' ? <BudgetModule /> : active === 'Dokumen Desain' ? <DesignDocumentsModule /> : active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : active === 'SDM & Payroll' ? <HRManagement /> : active === 'K3 & Keselamatan' ? <K3Management /> : active === 'Katalog API' ? <APICatalog /> : active === 'Keuangan' ? <Accounting /> : active === 'Laporan & Audit' ? <ReportsModule /> : <>
+          {active === 'CRM & Penjualan' ? <CRMModule /> : active === 'Proyek Konstruksi' ? <ConstructionProjectsModule /> : active === 'RAB & Anggaran' ? <BudgetModule /> : active === 'Dokumen Desain' ? <DesignDocumentsModule /> : active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : active === 'SDM & Payroll' ? <HRManagement /> : active === 'K3 & Keselamatan' ? <K3Management /> : active === 'Katalog API' ? <APICatalog /> : active === 'Keuangan' ? <Accounting /> : active === 'Laporan & Audit' ? <ReportsModule /> : active === 'Tugas Tim' ? <TeamTasksModule /> : active === 'Pengadaan' ? <ProcurementModule /> : <>
           <section className="welcome-row">
             <div><div className="eyebrow"><span className="eyebrow-line"/> {today.toLocaleUpperCase('id-ID')}</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
             <button className="primary-button" onClick={() => window.alert('Formulir proyek baru akan diaktifkan setelah modul data dan autentikasi tersedia.')}><Plus size={17}/> Proyek baru</button>
