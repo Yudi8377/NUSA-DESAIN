@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownToLine, ArrowUpRight, BriefcaseBusiness, Building2, Check, CirclePlus, FileCheck2, FileText, Filter, HardHat, Search, Trash2, WalletCards } from 'lucide-react'
+import { ArrowDownToLine, Building2, Check, CirclePlus, FileCheck2, FileText, Filter, HardHat, Search, Trash2, WalletCards } from 'lucide-react'
 import './OperationsModules.css'
 
 type Lead = { id: number; name: string; company: string; service: string; value: number; stage: string; owner: string }
