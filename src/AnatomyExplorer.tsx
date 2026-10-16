@@ -54,7 +54,7 @@ function BuildingDiagram({ system, visible, exploded }: { system:SystemId; visib
         <IsoBlock x={350} y={282} w={140} d={62} h={12} top="#9dbcc6" left="#608b9b" right="#4c7788"/>
       </g>}
       {visible.envelope && <g transform={'translate(0 '+(-lift*.8)+')'}>
-        <IsoBlock x={350} y={111} w={112} d={47} h={150} top="#c2e0d8" left="#75aaa3" right="#4f8c89" opacity={system==='structure'?.24:.72}/>
+        <IsoBlock x={350} y={111} w={112} d={47} h={150} top="#c2e0d8" left="#75aaa3" right="#4f8c89" opacity={system === 'structure' ? 0.24 : 0.72}/>
         {[0,1,2,3].map((n)=><path key={n} d={'M'+(266+n*21)+' '+(130+n*4)+' l0 130'} stroke="#e7f5f1" strokeWidth="2" opacity=".85"/>)}
       </g>}
       {visible.interior && <g transform={'translate(0 '+(-lift*.45)+')'}>{[0,1,2].map((n)=><g key={n}><IsoBlock x={315+n*20} y={184+n*17} w={26} d={15} h={16} top="#d8d0ed" left="#a99bc9" right="#8b7bb0" opacity=".9"/></g>)}</g>}
