@@ -11,6 +11,10 @@ ERP internal untuk perusahaan arsitektur dan konstruksi, dibangun sebagai produk
 - Database: PostgreSQL pada Neon.
 - Tidak menyimpan connection string, password, token, atau secret di repository.
 
+## Integrasi referensi visualisasi 3D
+
+Repository `Najwahkr/opengl-gedung-3d-feb-unesa` telah ditinjau pada tingkat struktur dan contoh sumber. Kode sumbernya adalah aplikasi desktop C++ berbasis FreeGLUT/OpenGL dan Visual Studio, bukan modul JavaScript yang dapat dipasang langsung ke React. Repository tersebut tidak mencantumkan lisensi pada metadata GitHub yang diperiksa. Karena itu, NUSA DESIGN menggunakan viewer web Three.js yang dibangun mandiri dengan pola interaksi serupa; kode C++ asli tidak disalin. Integrasi model/aset atau porting detail fasad lebih lanjut menunggu kepastian lisensi/izin dan pemetaan geometri.
+
 ## Modul roadmap
 
 1. Dashboard dan organisasi
