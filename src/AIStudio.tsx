@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import AIOutputSheet from './AIOutputSheet'
 import { Copy, Image, Film, Box, FileText, Sparkles, WandSparkles, ShieldCheck, ArrowUpRight, Check, CircleAlert } from 'lucide-react'
 
 const modes = [
@@ -103,6 +104,7 @@ export default function AIStudio() {
         <pre className="ai-prompt-preview">{prompt}</pre>
         <div className="ai-output-foot"><span><ShieldCheck size={14}/> Jangan masukkan data rahasia klien ke penyedia AI eksternal tanpa persetujuan.</span><span>{briefReady ? 'Brief berhasil disusun secara lokal' : 'Ubah detail lalu susun brief'}</span></div>
       </section>
+      {briefReady && <AIOutputSheet mode={mode} projectName={projectName} buildingType={buildingType} style={style} location={location} notes={notes} />}
       <footer className="ai-attribution">Terinspirasi oleh pola studio generatif Open Generative AI (MIT). UI ini dibangun khusus untuk NUSA DESIGN; bukan salinan aplikasi sumber.</footer>
     </div>
   )
