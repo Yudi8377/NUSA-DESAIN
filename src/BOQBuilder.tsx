@@ -4,7 +4,6 @@ import './OperationsModules.css'
 
 type Work = { id: number; code: string; group: string; description: string; specification: string; method: string; unit: string; volume: number; labor: number; material: number; equipment: number; source: string }
 type ProjectForm = { name: string; owner: string; location: string; type: string; discipline: string; area: string; floors: string; start: string; duration: string; standard: string; region: string }
-type Resource = { id: number; type: string; name: string; coefficient: number; unit: string; price: number }
 const money = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0)
 const idr = (n: number) => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(n || 0)
 const starterProject: ProjectForm = { name: 'Proyek Baru', owner: '', location: '', type: 'Gedung', discipline: 'Cipta Karya / Bangunan Gedung', area: '', floors: '1', start: '', duration: '180', standard: 'SE DJBK 47/SE/Dk/2026 + Permen PUPR 8/2023 (verifikasi ruang lingkup)', region: '' }
@@ -75,7 +74,6 @@ export default function BOQBuilder() {
   const [margin, setMargin] = useState(5)
   const [contingency, setContingency] = useState(3)
   const [tax, setTax] = useState(0)
-  const [resourceFilter, setResourceFilter] = useState('Semua')
   const filled = works.length > 0 ? works : []
   const subtotal = useMemo(() => filled.reduce((s,w) => s + w.volume * (w.labor+w.material+w.equipment), 0), [filled])
   const indirect = subtotal * margin / 100
