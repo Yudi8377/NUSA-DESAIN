@@ -27,6 +27,7 @@ export default function App() {
   const [floors, setFloors] = useState(5)
   const [mobileMenu, setMobileMenu] = useState(false)
   const [search, setSearch] = useState('')
+  const today = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
 
   return (
     <div className="app-shell">
@@ -64,7 +65,7 @@ export default function App() {
 
         <div className="page-content">
           <section className="welcome-row">
-            <div><div className="eyebrow"><span className="eyebrow-line"/> SENIN, 16 OKTOBER 2026</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
+            <div><div className="eyebrow"><span className="eyebrow-line"/> {today.toLocaleUpperCase('id-ID')}</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
             <button className="primary-button" onClick={() => window.alert('Formulir proyek baru akan diaktifkan setelah modul data dan autentikasi tersedia.')}><Plus size={17}/> Proyek baru</button>
           </section>
 
