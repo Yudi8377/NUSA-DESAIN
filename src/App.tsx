@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import BuildingViewer from './BuildingViewer'
 import AIStudio from './AIStudio'
+import AnatomyExplorer from './AnatomyExplorer'
 
 const menu = [
   { label: 'Ringkasan', icon: LayoutDashboard, active: true },
@@ -15,6 +16,7 @@ const menu = [
   { label: 'RAB & Anggaran', icon: WalletCards },
   { label: 'Dokumen Desain', icon: FileText },
   { label: 'Studio AI Desain', icon: Sparkles },
+  { label: 'Anatomi Bangunan', icon: Layers3 },
   { label: 'Tugas Tim', icon: ClipboardList },
 ]
 const lowerMenu = [
@@ -66,7 +68,7 @@ export default function App() {
         </header>
 
         <div className="page-content">
-          {active === 'Studio AI Desain' ? <AIStudio /> : <>
+          {active === 'Studio AI Desain' ? <AIStudio /> : active === 'Anatomi Bangunan' ? <AnatomyExplorer /> : <>
           <section className="welcome-row">
             <div><div className="eyebrow"><span className="eyebrow-line"/> {today.toLocaleUpperCase('id-ID')}</div><h1>{active === 'Ringkasan' ? 'Selamat datang kembali.' : active}</h1><p className="subtitle">{active === 'Ringkasan' ? 'Pantau progres proyek dan jaga seluruh pekerjaan tetap selaras.' : `Ringkasan area ${active.toLowerCase()} dalam workspace Anda.`}</p></div>
             <button className="primary-button" onClick={() => window.alert('Formulir proyek baru akan diaktifkan setelah modul data dan autentikasi tersedia.')}><Plus size={17}/> Proyek baru</button>
