@@ -28,13 +28,18 @@ Repository `Najwahkr/opengl-gedung-3d-feb-unesa` telah ditinjau pada tingkat str
 9. Pengadaan dan inventaris
 10. Viewer 3D gedung dan metadata model
 11. Studio AI Desain untuk menyusun brief konsep, render, video, dan materi presentasi
-12. Audit dan pelaporan
+12. Anatomi Bangunan untuk eksplorasi isometrik sistem struktur, selubung, MEP, interior, dan alur proyek
+13. Audit dan pelaporan
 
 ## Studio AI Desain
 
 Modul awal tersedia melalui menu **Studio AI Desain**. Saat ini modul menyusun dan menyalin brief generatif secara lokal; generasi gambar/video nyata belum terhubung. Baca [dokumen integrasi Open Generative AI](docs/INTEGRASI-OPEN-GENERATIVE-AI.md) untuk cakupan, atribusi, arsitektur backend, dan batasan keamanan.
 
 Kontrak backend dan rancangan job ada di [AI Studio Backend Contract](docs/AI-STUDIO-BACKEND-CONTRACT.md). Migrasi metadata job/aset: `database/migrations/0003_ai_studio_jobs_assets.sql`.
+
+## Anatomi Bangunan
+
+Menu **Anatomi Bangunan** menyediakan diagram isometrik konseptual yang dapat dieksplorasi per lapisan dan diagram alur proyek. Fitur ini terinspirasi pendekatan visual repository [Anatomy](https://github.com/wheresryan22/anatomy) (MIT), tetapi UI dan diagram NUSA DESIGN ditulis khusus dan tidak menyalin kit/contoh sumber. Diagram belum terhubung ke model BIM atau data proyek. Baca [dokumen integrasi Anatomy](docs/INTEGRASI-ANATOMY.md).
 
 ## Pengembangan lokal
 
