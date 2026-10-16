@@ -57,7 +57,7 @@ function BuildingDiagram({ system, visible, exploded }: { system:SystemId; visib
         <IsoBlock x={350} y={111} w={112} d={47} h={150} top="#c2e0d8" left="#75aaa3" right="#4f8c89" opacity={system === 'structure' ? 0.24 : 0.72}/>
         {[0,1,2,3].map((n)=><path key={n} d={'M'+(266+n*21)+' '+(130+n*4)+' l0 130'} stroke="#e7f5f1" strokeWidth="2" opacity=".85"/>)}
       </g>}
-      {visible.interior && <g transform={'translate(0 '+(-lift*.45)+')'}>{[0,1,2].map((n)=><g key={n}><IsoBlock x={315+n*20} y={184+n*17} w={26} d={15} h={16} top="#d8d0ed" left="#a99bc9" right="#8b7bb0" opacity=".9"/></g>)}</g>}
+      {visible.interior && <g transform={'translate(0 '+(-lift*.45)+')'}>{[0,1,2].map((n)=><g key={n}><IsoBlock x={315+n*20} y={184+n*17} w={26} d={15} h={16} top="#d8d0ed" left="#a99bc9" right="#8b7bb0" opacity={0.9}/></g>)}</g>}
       {visible.mep && <g transform={'translate(0 '+(-lift*.6)+')'} fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M292 132 L292 280 L330 296 L330 222 L378 198 L378 135" stroke="#d9904e" strokeWidth="7"/><path d="M310 150 L390 185 L390 257" stroke="#4f9db2" strokeWidth="5"/><path d="M292 220 L252 201 L252 158" stroke="#d5ad4e" strokeWidth="4"/><circle cx="292" cy="132" r="5" fill="#d9904e"/><circle cx="390" cy="257" r="5" fill="#4f9db2"/>
       </g>}
