@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowDownToLine, Building2, Check, CirclePlus, FileCheck2, FileText, Filter, HardHat, Search, Trash2, WalletCards } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { ArrowDownToLine, Building2, Check, CirclePlus, FileCheck2, FileText, Filter, HardHat, Search, Trash2 } from 'lucide-react'
 import './OperationsModules.css'
 import BOQBuilder from './BOQBuilder'
 
 type Lead = { id: number; name: string; company: string; service: string; value: number; stage: string; owner: string }
 type Project = { id: number; name: string; client: string; location: string; type: string; stage: string; progress: number; budget: number; due: string }
-type BudgetLine = { id: number; code: string; description: string; unit: string; volume: number; price: number }
 type DesignDoc = { id: number; name: string; project: string; type: string; revision: string; status: string; updated: string; fileName: string }
 
 const initialLeads: Lead[] = [
@@ -18,12 +17,6 @@ const initialProjects: Project[] = [
   { id: 1, name: 'Gedung Perkantoran Nusantara', client: 'PT Arunika Properti', location: 'Jakarta Selatan', type: 'Komersial', stage: 'Berjalan', progress: 68, budget: 8400000000, due: '2026-12-18' },
   { id: 2, name: 'Residensial Kemang', client: 'Kusuma Residence', location: 'Jakarta Selatan', type: 'Hunian', stage: 'Perencanaan', progress: 24, budget: 2750000000, due: '2027-03-30' },
   { id: 3, name: 'Gudang Logistik', client: 'PT Sentra Niaga', location: 'Bekasi', type: 'Industri', stage: 'Berjalan', progress: 42, budget: 5100000000, due: '2027-01-20' },
-]
-const initialBudget: BudgetLine[] = [
-  { id: 1, code: 'A.01', description: 'Pekerjaan persiapan dan pengukuran', unit: 'ls', volume: 1, price: 18500000 },
-  { id: 2, code: 'B.01', description: 'Pekerjaan tanah dan pondasi', unit: 'm³', volume: 120, price: 425000 },
-  { id: 3, code: 'C.01', description: 'Beton struktur K-300', unit: 'm³', volume: 86, price: 1350000 },
-  { id: 4, code: 'D.01', description: 'Pasangan dinding dan plester', unit: 'm²', volume: 640, price: 185000 },
 ]
 const initialDocs: DesignDoc[] = [
   { id: 1, name: 'Denah Lantai 01', project: 'Gedung Perkantoran Nusantara', type: 'Gambar arsitektur', revision: 'R03', status: 'Untuk review', updated: '2026-10-15', fileName: 'denah-lantai-01-r03.pdf' },
