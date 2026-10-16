@@ -86,3 +86,10 @@ Modul K3 menyediakan ikhtisar temuan, register insiden dan status tindak lanjut,
 ## Katalog API Publik
 
 Menu **Katalog API** menyediakan direktori statis terkurasi untuk kandidat layanan eksternal yang relevan dengan ERP arsitektur/konstruksi, termasuk pencarian dan filter. Daftar ini terinspirasi oleh [marcelscruz/public-apis](https://github.com/marcelscruz/public-apis), bukan salinan sinkronisasi langsung. Seluruh kandidat ditandai **Belum terhubung**; belum ada permintaan API eksternal atau kredensial yang dikonfigurasi. Tinjau [dokumen integrasi Public APIs](docs/INTEGRASI-PUBLIC-APIS.md) sebelum mengaktifkan provider.
+
+## Keuangan & Akuntansi
+
+Menu **Keuangan** berisi prototipe modul akuntansi internal: ikhtisar piutang/utang, daftar transaksi demo dengan filter dan ekspor CSV, rancangan bagan akun, alur jurnal double-entry, dan katalog laporan keuangan. Data masih ilustratif dan belum tersimpan ke database. Jangan gunakan untuk pembukuan resmi sebelum backend, validasi debit/kredit, otorisasi, audit trail, rekonsiliasi, dan pengujian selesai.
+
+Frappe Books ditinjau sebagai referensi fungsional. NUSA DESIGN tidak menyalin source code. Repository Frappe Books menggunakan AGPL-3.0; integrasi sebagai layanan terpisah melalui API dapat dipertimbangkan setelah tinjauan lisensi dan pemetaan data. Detail analisis: [Analisis Frappe Books](docs/ANALISIS-FRAPPE-BOOKS.md).
+
