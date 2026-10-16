@@ -30,7 +30,13 @@ Repository `Najwahkr/opengl-gedung-3d-feb-unesa` telah ditinjau pada tingkat str
 11. Studio AI Desain untuk menyusun brief konsep, render, video, dan materi presentasi
 12. Audit dan pelaporan
 
-## Studio AI Desain\n\nModul awal tersedia melalui menu **Studio AI Desain**. Saat ini modul menyusun dan menyalin brief generatif secara lokal; generasi gambar/video nyata belum terhubung. Baca [dokumen integrasi Open Generative AI](docs/INTEGRASI-OPEN-GENERATIVE-AI.md) untuk cakupan, atribusi, arsitektur backend, dan batasan keamanan.\n\n## Pengembangan lokal
+## Studio AI Desain
+
+Modul awal tersedia melalui menu **Studio AI Desain**. Saat ini modul menyusun dan menyalin brief generatif secara lokal; generasi gambar/video nyata belum terhubung. Baca [dokumen integrasi Open Generative AI](docs/INTEGRASI-OPEN-GENERATIVE-AI.md) untuk cakupan, atribusi, arsitektur backend, dan batasan keamanan.
+
+Kontrak backend dan rancangan job ada di [AI Studio Backend Contract](docs/AI-STUDIO-BACKEND-CONTRACT.md). Migrasi metadata job/aset: `database/migrations/0003_ai_studio_jobs_assets.sql`.
+
+## Pengembangan lokal
 
 ```bash
 npm install
@@ -48,8 +54,10 @@ npm run preview
 
 ## Database
 
-SQL migration awal tersedia di `database/migrations/0001_nusa_design_foundation.sql`. Tinjau dan jalankan secara sadar pada branch development Neon terlebih dahulu; jangan mengeksekusi migrasi eksperimen langsung pada production.
+Migrasi awal tersedia di `database/migrations/0001_nusa_design_foundation.sql`, baseline isolasi tenant di `database/migrations/0002_tenant_rls_baseline.sql`, dan metadata AI Studio di `database/migrations/0003_ai_studio_jobs_assets.sql`.
+
+Migrasi `0003` telah diterapkan pada branch development Neon `nusa-design-dev-ready` dan diverifikasi: kedua tabel tersedia serta Row-Level Security aktif. Belum diterapkan ke branch production. Kebijakan ini belum membuktikan keamanan produksi sampai API tepercaya memvalidasi sesi, menetapkan konteks tenant per transaksi, dan melewati pengujian lintas organisasi.
 
 ## Status
 
-Fondasi UI dan viewer 3D merupakan tahap awal, bukan klaim bahwa seluruh modul ERP telah selesai. Sebelum go-live, konfigurasikan autentikasi, kebijakan akses, secret deployment, backup, monitoring, dan uji penerimaan.
+Fondasi UI, viewer 3D, dan metadata AI Studio merupakan tahap awal, bukan klaim bahwa seluruh modul ERP telah selesai. Sebelum go-live, konfigurasikan autentikasi, API backend, kebijakan akses berbasis peran, secret deployment, penyimpanan aset privat, backup, monitoring, dan uji penerimaan.
