@@ -1,83 +1,82 @@
-# Integrasi Frappe HRMS ke NUSA DESIGN
+# Adopsi Fitur SDM & Payroll NUSA DESIGN
 
-Tanggal tinjauan: 16 Oktober 2026
+Tanggal tinjauan: 17 Oktober 2026
 
-## 1. Ringkasan
+## 1. Keputusan arsitektur
 
-Referensi: https://github.com/frappe/hrms
+Frappe HRMS (https://github.com/frappe/hrms) digunakan **hanya sebagai referensi kebutuhan dan alur kerja**. NUSA DESIGN tidak memasang, menjalankan, menghubungkan, atau mengintegrasikan instance Frappe HRMS.
 
-Frappe HRMS adalah sistem open-source untuk HR dan payroll. README proyek menjelaskan modul siklus hidup karyawan, cuti dan absensi, klaim biaya, manajemen kinerja, payroll/perpajakan, serta aplikasi mobile. Ruang lingkup repositori juga mencakup rekrutmen, shift, pelatihan, kompensasi, dan analitik.
+Fitur yang relevan akan dirancang dan diimplementasikan secara mandiri di NUSA DESIGN menggunakan stack yang sudah dipakai proyek: React, TypeScript, Vite, serta backend/database NUSA DESIGN yang diverifikasi tersedia. Tidak menyalin source code, komponen, aset, atau stylesheet Frappe HRMS.
 
-Stack referensi:
-- Backend: Frappe Framework, Python, database melalui framework.
-- UI: Frappe UI berbasis Vue; frontend dan roster memiliki build terpisah.
-- Integrasi: REST API disediakan melalui Frappe Framework.
-- Lisensi repository: GNU GPL-3.0 (periksa kembali lisensi serta versi yang benar-benar dipakai saat implementasi).
+Repositori referensi menggunakan lisensi GPL-3.0. Karena itu, implementasi NUSA DESIGN mengacu pada kebutuhan bisnis dan pola alur kerja secara umum, bukan mengambil kode dari repositori tersebut. Catatan ini bukan nasihat hukum.
 
-NUSA DESIGN saat ini memakai React + TypeScript + Vite dan Neon PostgreSQL. Oleh karena itu, menyalin source HRMS ke frontend tidak tepat dan tidak dilakukan.
+## 2. Prinsip implementasi
 
-## 2. Yang sudah ditambahkan ke NUSA DESIGN
+- **Native-first:** semua UI dan logika bisnis dibuat untuk NUSA DESIGN; tidak ada server Frappe, Frappe API, kredensial Frappe, atau sinkronisasi eksternal.
+- **Sesuai bidang usaha:** model SDM mendukung studio arsitektur, desain, engineering, quantity surveying, tenaga proyek, dan konstruksi.
+- **Status jujur:** data contoh diberi label demonstrasi. UI demonstrasi bukan bukti data tersimpan, proses persetujuan nyata, atau payroll aktif.
+- **Backend terverifikasi:** sebelum mengklaim persistensi, autentikasi, atau keamanan aktif, verifikasi skema database, API, role, dan pengujian.
+- **Payroll aman:** perhitungan payroll produksi hanya setelah aturan, periode, data sumber, hak akses, dan hasil uji diverifikasi oleh pihak HR/pajak yang kompeten.
+- **Privasi:** minimalkan akses terhadap NIK/NPWP, data rekening, penghasilan, kesehatan, kontrak, dan dokumen personal; lakukan audit akses serta kebijakan retensi.
 
-- Halaman **SDM & Payroll** native melalui menu yang sudah ada.
-- Ringkasan KPI, contoh daftar personel, antrean tugas HR, dan katalog kemampuan SDM.
-- Peringatan eksplisit bahwa data merupakan ilustrasi dan belum tersimpan/terhubung.
-- Dokumentasi arsitektur dan batasan lisensi ini.
+## 3. Pemetaan fitur referensi ke NUSA DESIGN
 
-Komponen yang ditambahkan: `src/HRManagement.tsx`; gaya di `src/style.css`; route/menu di `src/App.tsx`.
-
-## 3. Pemetaan kapabilitas untuk perusahaan arsitektur dan konstruksi
-
-| Kapabilitas | Kebutuhan NUSA DESIGN | Integrasi yang direncanakan |
+| Fitur | Penerapan native yang dituju | Kaitan dengan NUSA DESIGN |
 |---|---|---|
-| Employee lifecycle | Profil, kontrak, jabatan, penempatan proyek, onboarding/offboarding | HRMS sebagai sistem pencatatan HR; referensi ID karyawan di NUSA |
-| Attendance & shift | Absensi kantor/lapangan, shift, lembur, lokasi kerja bila diizinkan | Sinkronisasi terkontrol dan rekonsiliasi data |
-| Leave | Cuti/izin dan ketersediaan personel untuk jadwal proyek | Approval di HRMS, ringkasan read-only di NUSA |
-| Recruitment | Kandidat dan kebutuhan tenaga proyek | Tautan ke lowongan dan status rekrutmen |
-| Performance & training | Sasaran, penilaian, kompetensi, sertifikasi keselamatan/teknis | Profil kompetensi untuk perencanaan tim proyek |
-| Payroll & compensation | Komponen gaji, tunjangan, potongan, slip, approval | Payroll diproses hanya di sistem resmi yang dikonfigurasi; NUSA menerima status/total terbatas sesuai hak |
-| Tax & statutory | PPh 21, BPJS, THR, lembur, pelaporan | Validasi ahli pajak/HR Indonesia dan uji kasus sebelum produksi |
-| Analytics & audit | Headcount, absensi, biaya tenaga kerja per proyek | Dashboard agregat dengan audit akses |
+| Direktori karyawan | Profil, status kerja, jabatan, departemen, kontak kerja, kompetensi | Menentukan personel yang dapat dialokasikan ke proyek |
+| Struktur organisasi | Tim, atasan, peran, dan unit kerja | Koordinasi studio, desain, estimasi, lapangan, dan administrasi |
+| Kehadiran dan shift | Catatan hadir, jadwal, kerja lapangan, lembur dan koreksi | Mengukur ketersediaan tenaga proyek |
+| Cuti dan izin | Pengajuan, alasan, rentang tanggal, saldo, approval dan riwayat | Memperhitungkan kapasitas tim pada jadwal proyek |
+| Rekrutmen dan onboarding | Kandidat, kebutuhan posisi, tahapan seleksi, checklist masuk | Perencanaan kebutuhan tenaga kerja |
+| Kompetensi dan pelatihan | Keahlian, sertifikat teknis/K3, masa berlaku dan pelatihan | Pencocokan tenaga ahli dengan pekerjaan proyek |
+| Kinerja | Sasaran, evaluasi, catatan berkala dan rencana pengembangan | Pengembangan SDM berbasis peran/proyek |
+| Payroll dan kompensasi | Struktur upah, tunjangan, potongan, lembur, slip dan persetujuan | Pengendalian biaya tenaga kerja; aktif setelah validasi |
+| Pelaporan | Headcount, kehadiran, cuti, kompetensi dan agregat biaya | Dashboard operasional dan laporan manajemen |
+| Audit | Riwayat perubahan, aktor, waktu, alasan dan persetujuan | Akuntabilitas perubahan data SDM |
 
-## 4. Arsitektur target
+## 4. Arsitektur native yang dituju
 
-Direkomendasikan sebagai layanan terpisah terlebih dahulu:
+1. **UI React/TypeScript:** halaman SDM & Payroll di dalam navigasi NUSA DESIGN.
+2. **Layanan aplikasi NUSA DESIGN:** validasi input, aturan bisnis, alur persetujuan, dan pembatasan akses.
+3. **Database/backend NUSA DESIGN:** persistensi data HR dengan relasi dan migrasi yang terdokumentasi. Gunakan layanan yang benar-benar dikonfigurasi pada repo; jangan mengasumsikan koneksi hanya karena dokumentasi menyebutnya.
+4. **Otorisasi:** peran minimal Administrator HR, Petugas HR, Payroll Officer, Approver/Manajer Proyek, Karyawan (self-service), dan Auditor read-only.
+5. **Audit dan perlindungan:** pencatatan perubahan, pembatasan akses di server/database, validasi lintas pengguna, backup, retensi, dan pengujian pemulihan.
 
-1. **NUSA DESIGN UI**: navigasi, ringkasan, konteks proyek, dan laporan agregat.
-2. **NUSA backend/API**: autentikasi dan otorisasi, pemetaan user ke organisasi, audit log, validasi input, serta adapter integrasi.
-3. **Frappe HRMS instance**: sistem HR sumber data, dijalankan terpisah dengan versi yang dipin dan proses backup/upgrade.
-4. **Integration adapter**: server-to-server melalui API Frappe, allowlist endpoint, timeout/retry, idempotensi, pencatatan sinkronisasi, dan pemetaan ID.
-5. **Neon PostgreSQL**: hanya menyimpan data NUSA yang memang dibutuhkan; jangan menggandakan data payroll sensitif tanpa dasar, kebijakan retensi, dan izin akses yang jelas.
+Alur target: pengguna berizin → UI NUSA DESIGN → validasi dan otorisasi backend → database NUSA DESIGN → audit log. Tidak ada koneksi ke Frappe HRMS dalam alur tersebut.
 
-Rahasia API tidak boleh berada di browser, file `.env` yang dikomit, atau bundle frontend. Gunakan secret manager/environment server-side. Batasi akun integrasi pada permission minimum; jangan gunakan akun Administrator untuk sinkronisasi harian.
+## 5. Tahapan pembangunan
 
-## 5. Pilihan implementasi
+### Tahap 1 — UI dan alur demonstrasi
+- Direktori dengan pencarian dan filter.
+- Formulir dasar serta validasi masukan.
+- Antrean cuti/persetujuan dan status yang jelas.
+- Label data demo pada seluruh data ilustratif.
+- Tidak mengklaim data tersimpan di server.
 
-**Pilihan A — layanan terpisah (direkomendasikan):** jalankan Frappe HRMS secara terpisah dan integrasikan melalui API. Ini menjaga perbedaan stack dan batas lisensi lebih jelas. Tetap lakukan tinjauan hukum lisensi, keamanan, dan data sebelum distribusi.
+### Tahap 2 — Data dan akses
+- Verifikasi backend/database yang tersedia dan buat migrasi skema HR.
+- Persistensi data karyawan, tim, cuti, absensi dan kompetensi.
+- Autentikasi, role, izin minimum, audit trail dan pengujian akses.
+- Uji backup/restore serta validasi lintas role.
 
-**Pilihan B — membangun modul HR native:** buat skema dan backend HR sendiri di NUSA DESIGN dengan desain data dan perilaku yang dikembangkan mandiri, menggunakan kebutuhan bisnis sebagai acuan umum. Tidak menyalin kode Frappe HRMS. Ini membutuhkan pekerjaan lebih besar dan pengujian payroll yang ketat.
+### Tahap 3 — Operasi SDM
+- Kalender kehadiran/cuti, shift, onboarding, rekrutmen, sertifikat, dan evaluasi.
+- Hubungkan alokasi personel dengan proyek, tugas, jadwal, serta beban kerja.
+- Laporan operasional dan ekspor terkontrol.
 
-**Pilihan C — menggabungkan atau memodifikasi source HRMS ke produk yang didistribusikan:** jangan dilakukan tanpa tinjauan lisensi yang kompeten. GPL-3.0 dapat membawa kewajiban sumber terbuka dan pemberitahuan lisensi ketika versi turunan didistribusikan. Konsekuensi spesifik bergantung pada cara integrasi, pengemasan, dan distribusi; dokumen ini bukan nasihat hukum.
+### Tahap 4 — Payroll terkendali
+- Definisi komponen upah, tunjangan, potongan, lembur, dan periode.
+- Verifikasi aturan PPh 21, BPJS, THR, ketenagakerjaan dan kebijakan perusahaan berdasarkan sumber resmi terbaru serta ahli yang kompeten.
+- Uji kasus normal, koreksi, prorata, terminasi, pembulatan, dan rekonsiliasi pada data sintetis.
+- Persetujuan berlapis dan jejak audit sebelum pemakaian data nyata.
 
-## 6. Keamanan dan kepatuhan sebelum produksi
+## 6. Status implementasi
 
-- SSO atau mekanisme autentikasi yang disepakati; pemetaan identitas dan organisasi tidak boleh didasarkan pada nilai dari browser saja.
-- RBAC minimal: HR admin, HR officer, payroll officer, approver, project manager (akses terbatas), employee/self-service, auditor read-only.
-- Payroll, data bank, NPWP/NIK, data kesehatan, dan dokumen karyawan merupakan data sensitif/berisiko tinggi; minimalkan, enkripsi, batasi akses, dan audit akses.
-- Tenant boundary dan otorisasi harus diverifikasi pada backend dan pengujian API; jangan mengandalkan penyembunyian menu.
-- Atur retensi, backup terenkripsi, restore drill, logging tanpa data pribadi berlebih, incident response, dan prosedur koreksi data.
-- Validasi aturan Indonesia (antara lain PPh 21, BPJS, THR, lembur, kontrak, dan kebijakan ketenagakerjaan) dengan ahli yang kompeten dan sumber resmi terbaru.
-- Lakukan uji rekonsiliasi payroll dan persetujuan berlapis; jangan menganggap contoh KPI di UI sebagai data real.
+- Halaman native **SDM & Payroll** telah tersedia di `src/HRManagement.tsx`, dengan styling pada `src/style.css` dan navigasi di `src/App.tsx`.
+- Tampilan awal berisi data ilustratif dan belum dapat dianggap sebagai catatan HR yang persisten.
+- Dokumen ini tidak menyatakan bahwa autentikasi HR, persetujuan server-side, payroll, pajak, BPJS, atau kontrol produksi telah aktif.
+- Setiap tahapan hanya boleh ditandai selesai setelah kode, konfigurasi, pengujian, dan perilaku aktual diverifikasi.
 
-## 7. Tahapan berikutnya
+## 7. Batasan
 
-1. Pilih apakah Frappe HRMS akan menjadi layanan terpisah atau HR native NUSA.
-2. Sediakan environment server/hosting untuk Frappe, domain internal, TLS, backup, dan akun integrasi terbatas.
-3. Tentukan mapping organisasi, employee ID, proyek, cost center, role, serta sumber kebenaran setiap field.
-4. Implementasikan adapter API server-side dengan sinkronisasi read-only terlebih dahulu.
-5. Uji akses lintas role/organisasi, pagination, error, retry, duplikasi, dan audit log.
-6. Uji payroll pada dataset fiktif dengan kasus tepi dan verifikasi profesional sebelum mengaktifkan proses nyata.
-7. Baru setelah pengujian, aktifkan write-back yang diperlukan dengan approval dan idempotency.
-
-## Status implementasi saat ini
-
-Halaman SDM & Payroll NUSA DESIGN telah dibuat sebagai **UI awal demonstrasi**. Belum ada instance Frappe HRMS yang dipasang, koneksi API, autentikasi HR, sinkronisasi data, atau perhitungan payroll yang aktif. Tidak ada klaim bahwa payroll atau kepatuhan hukum sudah siap produksi.
+Dokumen ini adalah rencana rekayasa perangkat lunak, bukan nasihat hukum, pajak, atau ketenagakerjaan. Implementasi harus mengikuti ketentuan Indonesia yang berlaku dan kebijakan perusahaan yang telah diverifikasi.
