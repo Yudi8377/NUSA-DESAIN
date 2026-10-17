@@ -1,0 +1,60 @@
+name: NUSA DESIGN HR API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/hr/**'
+      - '.github/workflows/deploy-hr-api.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nusa-design-hr-api-dev
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    name: Build and package HR API
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: api/hr/package.json
+      - name: Install API dependencies
+        run: npm install --prefix api/hr --no-audit --no-fund
+      - name: Bundle for Neon Functions Node.js 24
+        run: |
+          mkdir -p api/hr/dist
+          api/hr/node_modules/.bin/esbuild api/hr/index.mjs --bundle --platform=node --target=node24 --format=esm --outfile=api/hr/dist/index.mjs --external:pg-native
+          node --check api/hr/dist/index.mjs
+          cd api/hr/dist
+          zip -q ../nusa-design-hr-api.zip index.mjs
+      - name: Upload deployable bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: nusa-design-hr-api
+          path: api/hr/nusa-design-hr-api.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Deploy to isolated Neon development branch when credentials are configured
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          if [ -z "$NEON_API_KEY" ]; then
+            echo "NEON_API_KEY is not configured; bundle artifact created, deployment skipped."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            -F "zip=@api/hr/nusa-design-hr-api.zip;type=application/zip" \
+            -F "runtime=nodejs24" \
+            -F 'environment={"ALLOWED_ORIGINS":"https://yudi8377.github.io,http://localhost:5173"}' \
+            "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/br-curly-flower-b4zhtzqp/functions/hrapi/deployments"
