@@ -1,9 +1,0 @@
-name = "nusa-design-ai-api"
-main = "src/index.ts"
-compatibility_date = "2025-03-01"
-workers_dev = true
-
-[vars]
-ALLOWED_ORIGIN = "https://yudi8377.github.io"
-IMAGE_MODEL = "gpt-image-2.5-flare"
-FAL_VIDEO_MODEL = "fal-ai/kling-video/v3/standard/text-to-video"
