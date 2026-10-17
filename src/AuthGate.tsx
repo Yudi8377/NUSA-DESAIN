@@ -34,11 +34,22 @@ export default function AuthGate() {
       const code = typeof result.error.code === 'string' ? ` (kode: ${result.error.code})` : ''
       throw new Error(`Neon Auth menolak penerbitan JWT${code}: ${result.error.message || 'kesalahan tidak diketahui'}`)
     }
+    // SDK versions expose JWT through different helpers. Prefer the documented
+    // token() response, then fall back to getJWTToken() when available.
     const token = result?.data?.token
-    if (typeof token !== 'string' || !token) {
-      throw new Error('Neon Auth belum mengirim JWT. Periksa apakah sesi cookie ikut terkirim dan domain Auth production sesuai.')
+    if (typeof token === 'string' && token) return token
+
+    try {
+      const legacyToken = await authClient.getJWTToken?.()
+      if (typeof legacyToken === 'string' && legacyToken) return legacyToken
+      if (typeof legacyToken?.data?.token === 'string' && legacyToken.data.token) return legacyToken.data.token
+    } catch {
+      // Keep the primary token response diagnostics below.
     }
-    return token
+
+    const resultKeys = result && typeof result === 'object' ? Object.keys(result).join(', ') : typeof result
+    const dataKeys = result?.data && typeof result.data === 'object' ? Object.keys(result.data).join(', ') : 'tidak ada'
+    throw new Error(`JWT tidak tersedia. Respons token: [${resultKeys || 'kosong'}]; data: [${dataKeys}]. Pastikan plugin JWT aktif pada branch Neon Auth production.`)
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
