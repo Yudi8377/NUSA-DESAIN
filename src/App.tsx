@@ -15,7 +15,7 @@ import APICatalog from './APICatalog'
 import Accounting from './Accounting'
 import ReportsModule from './ReportsModule'
 import { TeamTasksModule, ProcurementModule } from './WorkProcurement'
-import { CRMModule, ConstructionProjectsModule, BudgetModule, DesignDocumentsModule } from './OperationsModules'
+import { CRMModule, BudgetModule, DesignDocumentsModule } from './OperationsModules'
 
 const menu = [
   { label: 'Ringkasan', icon: LayoutDashboard, active: true },
