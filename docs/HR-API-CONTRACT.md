@@ -45,7 +45,7 @@ Semua respons sukses menggunakan `{ "data": ..., "meta": { "requestId": "..." } 
 
 ## Deploy dan verifikasi
 
-Workflow `.github/workflows/deploy-hr-api.yml` membangun bundle dan menyimpan artifact. Deployment otomatis ke branch development hanya berjalan jika secret repository `NEON_API_KEY` tersedia. Workflow memakai project `gentle-tooth-09855567` dan branch `br-curly-flower-b4zhtzqp` (`nusa-design-dev-ready`), tidak branch production.
+Workflow `.github/workflows/deploy-hr-api.yml` membangun bundle, menjalankan smoke tests, lalu—jika secret repository `NEON_API_KEY` tersedia—mendeploy ke branch development terlebih dahulu. Setelah health check dan penolakan request tanpa token lulus, workflow mempromosikan bundle yang sama ke branch production, menguji endpoint produksi, memperbarui repository variables publik `VITE_HR_API_BASE_URL` dan `VITE_NEON_AUTH_URL`, lalu memicu deploy GitHub Pages. Project: `gentle-tooth-09855567`; development: `br-curly-flower-b4zhtzqp`; production: `br-wispy-feather-b4t2xxmn`.
 
 Setelah deployment:
 1. `GET <function-url>/health` harus mengembalikan HTTP 200.
@@ -56,4 +56,4 @@ Setelah deployment:
 6. Buat dan baca pegawai hanya di workspace milik pengguna yang sedang login.
 7. Ulangi pengujian menggunakan dua akun dan dua workspace terpisah.
 
-Jangan isi `VITE_HR_API_BASE_URL` sebelum URL fungsi, health check, autentikasi, dan uji tenant isolation berhasil diverifikasi. Jangan menerapkan migrasi ke branch production sebelum seluruh migrasi, backup, rollback, dan penerimaan pengguna ditinjau.
+Jangan isi `VITE_HR_API_BASE_URL` sebelum URL fungsi, health check, autentikasi, dan uji tenant isolation berhasil diverifikasi. Migrasi 0001–0004 telah diterapkan pada branch production yang sebelumnya tidak memiliki tabel aplikasi. Assertion HR memverifikasi empat tabel HR, RLS, sembilan policy, dan helper role yang di-hardening. Sebelum menerima pelanggan berbayar, lakukan uji penerimaan fitur, backup/restore, prosedur rollback, privasi, dan tinjauan operasional.
