@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { hrApi, isHrApiConfigured, type HrEmployeeRecord } from './services/hrApi'
 import { CalendarDays, CheckCircle2, Clock3, FileCheck2, GraduationCap, ShieldAlert, Users, WalletCards, ClipboardCheck, UserPlus, CalendarClock, Search, Check, X, UserRoundSearch } from 'lucide-react'
 
 type Person = { initials: string; name: string; role: string; team: string; status: string; tone: 'present' | 'leave' | 'pending' }
@@ -23,7 +24,10 @@ const initialTasks: HrTask[] = [
   { id: 3, title: 'Perbarui kompetensi tim', detail: 'Cocokkan sertifikasi dan kompetensi dengan kebutuhan proyek.', due: 'Minggu ini', status: 'Menunggu', icon: ClipboardCheck },
 ]
 export default function HRManagement() {
-  const [people, setPeople] = useState(initialPeople)
+  const [people, setPeople] = useState<Person[]>(isHrApiConfigured ? [] : initialPeople)
+  const [apiLoading, setApiLoading] = useState(isHrApiConfigured)
+  const [apiError, setApiError] = useState('')
+  const [newEmployeeNumber, setNewEmployeeNumber] = useState('')
   const [tasks, setTasks] = useState(initialTasks)
   const [query, setQuery] = useState('')
   const [teamFilter, setTeamFilter] = useState('Semua tim')
@@ -40,11 +44,51 @@ export default function HRManagement() {
   }), [people, query, teamFilter])
   const pendingCount = tasks.filter(task => task.status === 'Menunggu').length
 
-  function addPerson(event: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!isHrApiConfigured) return
+    let cancelled = false
+    setApiLoading(true)
+    hrApi.listEmployees()
+      .then(records => {
+        if (!cancelled) {
+          setPeople(records.map(mapEmployee))
+          setApiError('')
+        }
+      })
+      .catch(error => {
+        if (!cancelled) setApiError(error instanceof Error ? error.message : 'Gagal memuat data SDM.')
+      })
+      .finally(() => { if (!cancelled) setApiLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const name = newName.trim()
     const role = newRole.trim()
     if (!name || !role) return
+    if (isHrApiConfigured) {
+      const employeeNumber = newEmployeeNumber.trim()
+      if (!employeeNumber) {
+        setNotice('Nomor karyawan wajib diisi untuk menyimpan ke server.')
+        return
+      }
+      try {
+        const saved = await hrApi.createEmployee({
+          employee_number: employeeNumber,
+          full_name: name,
+          department: newTeam,
+          job_title: role,
+          employment_type: 'permanent',
+        })
+        setPeople(current => [...current, mapEmployee(saved)])
+        setNewName(''); setNewRole(''); setNewTeam('Desain'); setNewEmployeeNumber(''); setShowAddForm(false)
+        setNotice('Data karyawan berhasil disimpan melalui API.')
+      } catch (error) {
+        setApiError(error instanceof Error ? error.message : 'Gagal menyimpan karyawan.')
+      }
+      return
+    }
     const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('')
     setPeople(current => [...current, { initials, name, role, team: newTeam, status: 'Perlu verifikasi', tone: 'pending' }])
     setNewName(''); setNewRole(''); setNewTeam('Desain'); setShowAddForm(false)
@@ -60,7 +104,8 @@ export default function HRManagement() {
       <div><div className="hrms-eyebrow">PEOPLE OPERATIONS · NUSA DESIGN</div><h1>SDM & Payroll</h1><p>Kelola tim desain, tenaga ahli, dan personel proyek dari satu ruang kerja. Modul native ini dirancang untuk alur HR perusahaan arsitektur dan konstruksi.</p></div>
       <div className="hrms-hero-aside"><strong>Tim yang tepat, proyek yang lebih terarah.</strong><span>Hubungkan ketersediaan personel dengan jadwal, kompetensi, dan kebutuhan proyek.</span></div>
     </section>
-    <div className="hrms-demo-notice"><ShieldAlert size={16} /><span><b>Mode demonstrasi.</b> Nama, angka, status, dan tindakan di halaman ini adalah data contoh yang hanya berubah di sesi browser. Belum terhubung ke database HR, autentikasi, approval server-side, atau mesin payroll.</span></div>
+    <div className="hrms-demo-notice"><ShieldAlert size={16} /><span><b>{isHrApiConfigured ? 'Mode API SDM.' : 'Mode demonstrasi.'}</b> {isHrApiConfigured ? 'Direktori memakai API server terkonfigurasi. Tindakan antrean dan payroll tetap demonstrasi sampai endpoint terkait aktif.' : 'Nama, angka, status, dan tindakan hanya berubah di sesi browser. Belum terhubung ke database HR, autentikasi, approval server-side, atau mesin payroll.'}</span></div>
+    {apiError && <div className="hrms-demo-notice" role="alert"><ShieldAlert size={16}/><span>{apiError} {isHrApiConfigured ? 'Periksa konfigurasi API dan sesi akses; data demo tidak akan ditampilkan sebagai pengganti.' : ''}</span></div>}
     {notice && <div className="hrms-demo-notice" role="status"><CheckCircle2 size={16}/><span>{notice}</span><button className="hrms-action" onClick={() => setNotice('')}>Tutup</button></div>}
     <section className="hrms-metrics">
       <Metric icon={<Users size={17}/>} title="Total karyawan contoh" value={String(48 + Math.max(0, people.length - initialPeople.length))} note="Bukan headcount perusahaan terverifikasi" />
@@ -70,21 +115,22 @@ export default function HRManagement() {
     </section>
     <section className="hrms-content-grid">
       <article className="hrms-panel">
-        <div className="hrms-panel-head"><div><h2>Direktori personel contoh</h2><p>Cari dan filter data demonstrasi</p></div><span className="hrms-tag">{filteredPeople.length} terlihat</span></div>
+        <div className="hrms-panel-head"><div><h2>{isHrApiConfigured ? 'Direktori karyawan' : 'Direktori personel contoh'}</h2><p>{isHrApiConfigured ? 'Data dibaca dari API server' : 'Cari dan filter data demonstrasi'}</p></div><span className="hrms-tag">{apiLoading ? 'Memuat…' : `${filteredPeople.length} terlihat`}</span></div>
         <div className="hrms-actions" style={{marginBottom:12}}>
           <label className="hrms-search"><Search size={15}/><input aria-label="Cari personel" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari nama, jabatan, tim..." /></label>
           <select className="hrms-filter" aria-label="Filter tim" value={teamFilter} onChange={event => setTeamFilter(event.target.value)}><option>Semua tim</option><option>Desain</option><option>Konstruksi</option><option>Estimasi</option><option>Proyek</option></select>
         </div>
         <div className="hrms-table-wrap"><table className="hrms-table"><thead><tr><th>Karyawan</th><th>Tim</th><th>Status</th></tr></thead><tbody>
           {filteredPeople.map((person, index) => <tr key={person.initials + person.name + index}><td><div className="hrms-employee"><span className="hrms-employee-avatar">{person.initials}</span><span><b>{person.name}</b><small>{person.role}</small></span></div></td><td>{person.team}</td><td><span className={`hrms-status ${person.tone === 'leave' ? 'leave' : person.tone === 'pending' ? 'pending' : ''}`}>{person.status}</span></td></tr>)}
-          {filteredPeople.length === 0 && <tr><td colSpan={3}>Tidak ada personel yang cocok dengan pencarian.</td></tr>}
+          {filteredPeople.length === 0 && <tr><td colSpan={3}>{apiLoading ? 'Memuat data karyawan…' : isHrApiConfigured && apiError ? 'Data tidak tersedia karena API gagal diakses.' : 'Tidak ada personel yang cocok dengan pencarian.'}</td></tr>}
         </tbody></table></div>
         <div className="hrms-actions" style={{marginTop:14}}><button className="hrms-action" onClick={() => { setQuery(''); setTeamFilter('Semua tim') }}><UserRoundSearch size={13}/> Reset filter</button><button className="hrms-action primary" onClick={() => setShowAddForm(value => !value)}><UserPlus size={13}/> {showAddForm ? 'Tutup formulir' : 'Tambah contoh karyawan'}</button></div>
         {showAddForm && <form className="hrms-add-form" onSubmit={addPerson}>
+          {isHrApiConfigured && <label>Nomor karyawan<input required value={newEmployeeNumber} onChange={event => setNewEmployeeNumber(event.target.value)} placeholder="Contoh: ND-2026-001"/></label>}
           <label>Nama lengkap<input required value={newName} onChange={event => setNewName(event.target.value)} placeholder="Contoh: Nabila Putri"/></label>
           <label>Jabatan<input required value={newRole} onChange={event => setNewRole(event.target.value)} placeholder="Contoh: BIM Modeler"/></label>
           <label>Tim<select value={newTeam} onChange={event => setNewTeam(event.target.value)}><option>Desain</option><option>Konstruksi</option><option>Estimasi</option><option>Proyek</option></select></label>
-          <button className="hrms-action primary" type="submit"><UserPlus size={13}/> Tambahkan ke demo</button>
+          <button className="hrms-action primary" type="submit"><UserPlus size={13}/> {isHrApiConfigured ? 'Simpan karyawan' : 'Tambahkan ke demo'}</button>
         </form>}
       </article>
       <article className="hrms-panel">
@@ -100,4 +146,11 @@ export default function HRManagement() {
 }
 function Metric({icon,title,value,note}:{icon:React.ReactNode;title:string;value:string;note:string}) {
   return <article className="hrms-metric"><div className="hrms-metric-top"><span>{title}</span><span className="hrms-metric-icon">{icon}</span></div><strong>{value}</strong><small>{note}</small></article>
+}
+
+function mapEmployee(record: HrEmployeeRecord): Person {
+  const initials = record.full_name.split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('')
+  const tone: Person['tone'] = record.employment_status === 'on_leave' ? 'leave' : record.employment_status === 'active' ? 'present' : 'pending'
+  const status = record.employment_status === 'active' ? 'Aktif' : record.employment_status === 'on_leave' ? 'Cuti' : record.employment_status === 'suspended' ? 'Ditangguhkan' : 'Tidak aktif'
+  return { initials, name: record.full_name, role: record.job_title, team: record.department, status, tone }
 }
