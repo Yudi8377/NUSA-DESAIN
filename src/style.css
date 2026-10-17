@@ -45,3 +45,21 @@
 .ai-generated-result a{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:#3b8179;font-size:10px;font-weight:700;text-decoration:none}
 .ai-generated-result a:hover{text-decoration:underline}
 @media(max-width:600px){.ai-generation-panel{padding:11px}.ai-generation-actions{align-items:stretch;flex-direction:column}.ai-generation-actions .ai-primary-button{justify-content:center}.ai-generation-status{flex-wrap:wrap}.ai-generation-status>div{min-width:calc(100% - 35px)}}
+
+
+/* Native HR demo interactions: search, filters, forms, and local-only workflow status */
+.hrms-search{display:flex;align-items:center;gap:8px;flex:1;min-width:150px;border:1px solid #dfe7eb;border-radius:6px;padding:0 10px;background:#fbfcfd;color:#81919d}
+.hrms-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;padding:9px 0;font:inherit;font-size:10px;color:#34485b}
+.hrms-filter,.hrms-add-form input,.hrms-add-form select{min-width:0;border:1px solid #dfe7eb;border-radius:6px;background:#fbfcfd;padding:9px 10px;font:inherit;font-size:10px;color:#34485b}
+.hrms-filter{max-width:145px}
+.hrms-add-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;padding:14px;border:1px solid #e4ecee;border-radius:8px;background:#f9fbfb}
+.hrms-add-form label{display:grid;gap:6px;font-size:10px;font-weight:600;color:#526477;min-width:0}
+.hrms-add-form input,.hrms-add-form select{width:100%;box-sizing:border-box;font-weight:400}
+.hrms-add-form button{align-self:end;justify-content:center}
+.hrms-task-status{display:inline-block;margin-top:7px;padding:3px 6px;border-radius:4px;background:#fff4e3;color:#a87838;font-size:9px!important}
+.hrms-task-status.approved{background:#e9f6ef;color:#3f8b68}
+.hrms-task-status.rejected{background:#fff0ee;color:#b45a4f}
+.hrms-task-buttons{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hrms-task-buttons .hrms-action{display:inline-flex;align-items:center;gap:4px;padding:6px 7px;font-size:9px}
+.hrms-task-buttons .hrms-action.danger{color:#a44f47;border-color:#f0d8d5}
+@media(max-width:650px){.hrms-filter{max-width:none;flex:1}.hrms-add-form{grid-template-columns:1fr}.hrms-task-buttons{flex-direction:column;align-items:flex-start}}
