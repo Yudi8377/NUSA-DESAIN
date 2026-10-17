@@ -8,7 +8,7 @@ pool.on('error', (error) => console.error('postgres_pool_error', error?.message 
 const authBase = process.env.NEON_AUTH_BASE_URL;
 const jwksUrl = process.env.NEON_AUTH_JWKS_URL;
 const jwks = jwksUrl ? createRemoteJWKSet(new URL(jwksUrl)) : null;
-const issuer = authBase ? new URL(authBase).origin : null;
+const issuer = authBase || null;
 const allowedOrigins = new Set((process.env.ALLOWED_ORIGINS || 'https://yudi8377.github.io,http://localhost:5173').split(',').map(x => x.trim()).filter(Boolean));
 
 function json(data, status = 200, headers = {}) {
