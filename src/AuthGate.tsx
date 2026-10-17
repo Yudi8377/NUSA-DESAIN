@@ -23,22 +23,20 @@ export default function AuthGate() {
 
   const getToken = useCallback(async () => {
     if (!authClient) return ''
-    let result: any
+    if (typeof authClient.getJWTToken !== 'function') {
+      throw new Error('SDK Neon Auth tidak menyediakan getJWTToken(). Pastikan versi @neondatabase/auth yang terpasang mendukung penerbitan JWT.')
+    }
+    let token: unknown
     try {
-      result = await authClient.token()
+      // Neon Auth SDK exposes the signed JWT through getJWTToken(); token()
+      // is a Better Auth endpoint and may return session/user data instead.
+      token = await authClient.getJWTToken()
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Kesalahan jaringan atau respons tidak dikenal.'
-      throw new Error(`Neon Auth gagal menerbitkan token: ${detail}`)
+      throw new Error(`Neon Auth gagal menerbitkan JWT: ${detail}`)
     }
-    if (result?.error) {
-      const code = typeof result.error.code === 'string' ? ` (kode: ${result.error.code})` : ''
-      throw new Error(`Neon Auth menolak penerbitan token${code}: ${result.error.message || 'kesalahan tidak diketahui'}`)
-    }
-    const token = result?.data?.token
     if (typeof token !== 'string' || !token) {
-      const resultKeys = result && typeof result === 'object' ? Object.keys(result).join(', ') || 'kosong' : typeof result
-      const dataKeys = result?.data && typeof result.data === 'object' ? Object.keys(result.data).join(', ') || 'kosong' : 'tidak tersedia'
-      throw new Error(`Neon Auth tidak mengembalikan data.token. Properti respons: ${resultKeys}; properti data: ${dataKeys}. Periksa plugin JWT pada branch production Neon Auth.`)
+      throw new Error('Neon Auth getJWTToken() tidak mengembalikan JWT. Periksa konfigurasi plugin JWT pada branch production.')
     }
     return token
   }, [])
