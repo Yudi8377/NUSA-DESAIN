@@ -81,7 +81,7 @@ CREATE INDEX idx_hr_attendance_employee_date
 CREATE TABLE public.hr_leave_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-  employee_id uuid NOT NULL REFERENCES public.hr_employees(id) ON DELETE CASCADE,
+  employee_id uuid NOT NULL,
   leave_type text NOT NULL
     CHECK (leave_type IN ('annual','sick','maternity','paternity','unpaid','special','other')),
   start_date date NOT NULL,
@@ -108,7 +108,7 @@ CREATE INDEX idx_hr_leave_employee_dates
 CREATE TABLE public.hr_employee_competencies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-  employee_id uuid NOT NULL REFERENCES public.hr_employees(id) ON DELETE CASCADE,
+  employee_id uuid NOT NULL,
   competency_name text NOT NULL,
   proficiency text NOT NULL DEFAULT 'intermediate'
     CHECK (proficiency IN ('beginner','intermediate','advanced','expert')),
@@ -193,7 +193,7 @@ CREATE POLICY hr_leave_insert_self ON public.hr_leave_requests
     AND public.nusa_is_org_member(organization_id)
     AND EXISTS (
       SELECT 1 FROM public.hr_employees e
-      WHERE e.id = employee_id AND e.organization_id = organization_id
+      WHERE e.id = hr_leave_requests.employee_id AND e.organization_id = hr_leave_requests.organization_id
         AND e.user_id = public.nusa_current_user_id()
     )
   );
@@ -215,7 +215,7 @@ CREATE POLICY hr_competencies_select ON public.hr_employee_competencies
       public.nusa_has_org_role(organization_id, ARRAY['owner','admin','hr','project_manager'])
       OR EXISTS (
         SELECT 1 FROM public.hr_employees e
-        WHERE e.id = employee_id AND e.organization_id = organization_id
+        WHERE e.id = hr_employee_competencies.employee_id AND e.organization_id = hr_employee_competencies.organization_id
           AND e.user_id = public.nusa_current_user_id()
       )
     )
