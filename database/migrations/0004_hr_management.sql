@@ -40,11 +40,12 @@ CREATE TABLE public.hr_employees (
   created_by uuid REFERENCES public.user_profiles(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (organization_id, id),
   UNIQUE (organization_id, employee_number),
   UNIQUE (organization_id, user_id),
   CHECK (termination_date IS NULL OR hire_date IS NULL OR termination_date >= hire_date),
-  CONSTRAINT hr_employee_manager_fk FOREIGN KEY (manager_employee_id)
-    REFERENCES public.hr_employees(id) ON DELETE SET NULL
+  CONSTRAINT hr_employee_manager_fk FOREIGN KEY (organization_id, manager_employee_id)
+    REFERENCES public.hr_employees(organization_id, id) ON DELETE SET NULL (manager_employee_id)
 );
 
 CREATE INDEX idx_hr_employees_org_department
@@ -55,7 +56,7 @@ CREATE INDEX idx_hr_employees_org_name
 CREATE TABLE public.hr_attendance_records (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-  employee_id uuid NOT NULL REFERENCES public.hr_employees(id) ON DELETE CASCADE,
+  employee_id uuid NOT NULL,
   work_date date NOT NULL,
   check_in timestamptz,
   check_out timestamptz,
@@ -67,6 +68,8 @@ CREATE TABLE public.hr_attendance_records (
   reviewed_by uuid REFERENCES public.user_profiles(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT hr_attendance_employee_fk FOREIGN KEY (organization_id, employee_id)
+    REFERENCES public.hr_employees(organization_id, id) ON DELETE CASCADE,
   UNIQUE (organization_id, employee_id, work_date),
   CHECK (check_out IS NULL OR check_in IS NULL OR check_out >= check_in)
 );
@@ -92,6 +95,8 @@ CREATE TABLE public.hr_leave_requests (
   decision_note text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT hr_leave_employee_fk FOREIGN KEY (organization_id, employee_id)
+    REFERENCES public.hr_employees(organization_id, id) ON DELETE CASCADE,
   CHECK (end_date >= start_date),
   CHECK ((status = 'pending' AND decided_at IS NULL) OR status <> 'pending')
 );
@@ -114,6 +119,8 @@ CREATE TABLE public.hr_employee_competencies (
   notes text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT hr_competency_employee_fk FOREIGN KEY (organization_id, employee_id)
+    REFERENCES public.hr_employees(organization_id, id) ON DELETE CASCADE,
   CHECK (expires_on IS NULL OR issued_on IS NULL OR expires_on >= issued_on)
 );
 CREATE INDEX idx_hr_competencies_employee
@@ -153,7 +160,7 @@ CREATE POLICY hr_attendance_select ON public.hr_attendance_records
       public.nusa_has_org_role(organization_id, ARRAY['owner','admin','hr','project_manager'])
       OR EXISTS (
         SELECT 1 FROM public.hr_employees e
-        WHERE e.id = employee_id AND e.organization_id = organization_id
+        WHERE e.id = employee_id AND e.organization_id = hr_attendance_records.organization_id
           AND e.user_id = public.nusa_current_user_id()
       )
     )
