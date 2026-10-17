@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, Download, Image, Film, RefreshCw, Sparkles } from 'lucide-react'
 
-const API_BASE = (import.meta.env.VITE_AI_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+const API_BASE = (((import.meta as unknown as { env?: { VITE_AI_API_URL?: string } }).env?.VITE_AI_API_URL) ?? '').replace(/\/$/, '')
 type Props = { mode: string; prompt: string; projectName: string }
 type Health = { imageConfigured?: boolean; videoConfigured?: boolean; accessConfigured?: boolean }
 type Generation = { error?: string; imageData?: string; imageUrl?: string; requestId?: string; status?: string; videoUrl?: string; revisedPrompt?: string }
