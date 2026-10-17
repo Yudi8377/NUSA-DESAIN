@@ -1,97 +1,55 @@
-# Kontrak API SDM & Payroll NUSA DESIGN
+# Kontrak API SDM NUSA DESIGN
 
-Status: rancangan kontrak, belum merupakan API yang aktif.
+Status: **kode endpoint tersedia di repository; deployment API dan uji end-to-end belum terkonfirmasi.**
 
-## Tujuan
+## Runtime
 
-Menjadi batas yang jelas antara UI React/TypeScript dan database PostgreSQL di Neon. Browser tidak boleh menerima connection string atau akses database langsung. Semua endpoint harus memvalidasi sesi, keanggotaan organisasi, izin tindakan, input, dan konteks tenant sebelum menjalankan SQL.
+- Entry point: `api/hr/index.mjs`
+- Runtime target: Node.js 24
+- Database: Neon PostgreSQL; memakai `DATABASE_URL` yang diinjeksi runtime.
+- Autentikasi: JWT Neon Auth Managed Better Auth; verifikasi tanda tangan melalui `NEON_AUTH_JWKS_URL` dan issuer dari `NEON_AUTH_BASE_URL`.
+- Dependency: `pg` dan `jose`, dibundel saat build fungsi.
+- Origin browser yang diizinkan harus dibatasi lewat `ALLOWED_ORIGINS`; jangan menggunakan wildcard untuk API berautentikasi.
 
-## Persyaratan wajib untuk setiap request
+## Endpoint
 
-1. Validasi token/sesi pada server; jangan mempercayai user_id, organization_id, role, atau created_by dari body request.
-2. Resolve user dan organisasi dari sesi yang telah diverifikasi.
-3. Jalankan query dalam transaksi dan set app.user_id serta app.organization_id secara transaction-local (misalnya set_config(..., true)) agar RLS bekerja dan konteks tidak bocor ke request lain.
-4. Terapkan otorisasi di handler dan database. Jangan mengandalkan kontrol tombol pada frontend.
-5. Validasi UUID, tanggal, enum, ukuran payload, batas halaman, dan semua nilai numerik. Gunakan parameterized SQL.
-6. Catat perubahan sensitif pada audit log: aktor, organisasi, entitas, aksi, waktu, dan alasan. Jangan mencatat data pribadi penuh atau token.
-7. Gunakan respons error yang tidak membocorkan SQL, rahasia, atau keberadaan data tenant lain.
+| Method | Path | Tujuan | Otorisasi |
+|---|---|---|---|
+| GET | `/health` | Status proses dan nama branch | Publik; tidak membocorkan detail database |
+| GET | `/api/organizations` | Workspace milik pengguna yang login | JWT valid; daftar diturunkan dari keanggotaan server |
+| POST | `/api/organizations` | Membuat workspace dan menjadikan pembuat sebagai owner | JWT valid dan email terverifikasi |
+| GET | `/api/hr/employees?limit=100` | Direktori pegawai | JWT + header `X-Organization-Id` + keanggotaan; role owner/admin/hr/project_manager |
+| POST | `/api/hr/employees` | Membuat pegawai | JWT + workspace aktif + role owner/admin/hr |
 
-## Endpoint target
+### Header
 
-| Method & path | Fungsi | Izin minimum |
-|---|---|---|
-| GET /api/hr/employees | Direktori dengan pencarian, filter tim/status, dan pagination | HR/admin; manager hanya data yang diizinkan |
-| POST /api/hr/employees | Membuat profil karyawan | HR/admin |
-| GET /api/hr/employees/:id | Detail profil sesuai cakupan | HR/admin/manager sesuai kebutuhan; karyawan untuk profil sendiri |
-| PATCH /api/hr/employees/:id | Memperbarui profil | HR/admin |
-| GET /api/hr/attendance | Rekap kehadiran berdasarkan rentang tanggal | HR/admin/manager sesuai cakupan; karyawan hanya data sendiri |
-| POST /api/hr/attendance | Mencatat atau mengimpor kehadiran | HR/admin; impor wajib tervalidasi dan idempotent |
-| GET /api/hr/leave-requests | Daftar pengajuan sesuai role | HR/admin/manager dan pemohon sendiri |
-| POST /api/hr/leave-requests | Mengajukan cuti/izin | Karyawan aktif milik organisasi |
-| POST /api/hr/leave-requests/:id/decision | Menyetujui/menolak dengan catatan | HR/admin atau approver yang ditetapkan |
-| GET /api/hr/competencies | Kompetensi dan sertifikat sesuai cakupan | HR/admin/manager; karyawan untuk data sendiri |
-| POST /api/hr/competencies | Menambah kompetensi/sertifikat | HR/admin |
-| GET /api/hr/payroll/periods | Daftar periode payroll | HR/payroll officer/admin |
-| POST /api/hr/payroll/preview | Simulasi perhitungan tanpa mengesahkan pembayaran | HR/payroll officer; hanya setelah mesin payroll tersedia |
-| POST /api/hr/payroll/:period/approve | Mengesahkan periode payroll | Approver yang ditetapkan, dengan pemisahan tugas |
+- `Authorization: Bearer <token>` — token pendek dari `authClient.token()`.
+- `X-Organization-Id: <uuid>` — hanya selector workspace; server memeriksa membership dan role, tidak mempercayai ID yang dikirim klien.
+- `Content-Type: application/json` untuk permintaan JSON.
 
-Endpoint payroll adalah rencana masa depan. Tidak boleh mengembalikan nilai gaji atau mengeksekusi penggajian sampai komponen, aturan, dan hasil uji disahkan.
+Semua respons sukses menggunakan `{ "data": ..., "meta": { "requestId": "..." } }`. Error memakai `{ "error": { "message": "...", "requestId": "..." } }`. Respons API menggunakan `Cache-Control: no-store`.
 
-## Bentuk respons
+## Keamanan yang diterapkan di source
 
-Sukses tunggal:
+1. JWT diverifikasi dengan JWKS, issuer, dan klaim subject; token yang tidak valid ditolak sebelum query aplikasi.
+2. Semua input SQL memakai parameter; panjang input, tipe hubungan kerja, dan format email divalidasi.
+3. Setiap permintaan HR memeriksa profil, membership, dan role pada server.
+4. Konteks `app.user_id` dan `app.organization_id` ditetapkan dengan `set_config(..., true)` dalam transaksi yang sama, sesuai helper RLS migrasi 0004.
+5. Header organisasi tidak menjadi bukti otorisasi; membership harus ada untuk subject JWT tersebut.
+6. CORS menggunakan allowlist origin; token Bearer dipakai, bukan cookie lintas situs.
+7. Error internal tidak mengirim stack trace atau detail database kepada browser.
 
-    {
-      "data": { "id": "uuid", "status": "active" },
-      "meta": { "requestId": "server-generated-id" }
-    }
+## Deploy dan verifikasi
 
-Daftar berpaginasi:
+Workflow `.github/workflows/deploy-hr-api.yml` membangun bundle dan menyimpan artifact. Deployment otomatis ke branch development hanya berjalan jika secret repository `NEON_API_KEY` tersedia. Workflow memakai project `gentle-tooth-09855567` dan branch `br-curly-flower-b4zhtzqp` (`nusa-design-dev-ready`), tidak branch production.
 
-    {
-      "data": [],
-      "pagination": { "limit": 25, "nextCursor": null },
-      "meta": { "requestId": "server-generated-id" }
-    }
+Setelah deployment:
+1. `GET <function-url>/health` harus mengembalikan HTTP 200.
+2. Tanpa Bearer token, `GET /api/organizations` harus HTTP 401.
+3. Token invalid harus HTTP 401.
+4. ID workspace bukan anggota harus HTTP 403.
+5. Pengguna non-HR harus ditolak saat `POST /api/hr/employees`.
+6. Buat dan baca pegawai hanya di workspace milik pengguna yang sedang login.
+7. Ulangi pengujian menggunakan dua akun dan dua workspace terpisah.
 
-Error aman:
-
-    {
-      "error": {
-        "code": "VALIDATION_ERROR",
-        "message": "Periksa kembali data yang dikirim.",
-        "requestId": "server-generated-id"
-      }
-    }
-
-Jangan mengembalikan stack trace, query SQL, connection string, credential, atau data organisasi lain.
-
-## Aturan persetujuan cuti
-
-- Pengajuan baru dibuat dalam status pending; pemohon tidak boleh mengirim nilai approved atau decided_by.
-- Endpoint keputusan menerima hanya approved atau rejected, catatan opsional, dan memakai conditional update agar keputusan ganda tidak menimpa keputusan sebelumnya.
-- Simpan identitas approver dan timestamp dari sesi/server.
-- Perubahan status harus menghasilkan audit event.
-- Ketersediaan personel proyek perlu diperiksa sebelum persetujuan bila jadwal proyek telah tersedia.
-
-## Kriteria penerimaan keamanan
-
-- Pengguna tanpa sesi tidak dapat membaca atau mengubah data HR.
-- Pengguna organisasi A tidak dapat membaca, membuat referensi, mengubah, atau menebak data organisasi B.
-- Karyawan tidak dapat membaca profil, absensi, atau pengajuan karyawan lain.
-- Karyawan tidak dapat mengubah role, organisasi, status keputusan, atau identitas aktor melalui body request.
-- Request lintas organisasi dan perubahan tanpa izin diuji otomatis.
-- Konteks tenant disetel transaction-local dan tidak bertahan setelah transaksi selesai.
-- Setiap perubahan sensitif dapat ditelusuri tanpa menyimpan rahasia atau data pribadi berlebihan.
-
-## Status implementasi
-
-- Database: migrasi 0004_hr_management.sql telah diterapkan pada branch development Neon nusa-design-dev-ready; RLS dan empat tabel HR diverifikasi.
-- UI: tersedia client TypeScript untuk GET/POST direktori pada `src/services/hrApi.ts`. Tanpa `VITE_HR_API_BASE_URL`, UI tetap pada mode demo; saat URL dikonfigurasi, direktori memakai API dan tidak jatuh diam-diam ke data demo jika request gagal.
-- API client memakai cookie/session credentials dan mengharapkan envelope `{ data: ... }`; server lintas-origin harus mengatur CORS secara ketat dan perlindungan CSRF untuk operasi tulis.
-- Backend/API aktual, autentikasi aplikasi, audit event otomatis, pengujian lintas tenant, dan payroll: belum diimplementasikan. Jangan mengisi `VITE_HR_API_BASE_URL` sebelum endpoint server tepercaya benar-benar tersedia.
-
-
-## Regression check database
-
-Skrip `database/tests/0004_hr_security_assertions.sql` memeriksa keberadaan empat tabel HR, status RLS, sembilan policy yang diwajibkan, dan konfigurasi helper role. Skrip ini bersifat read-only dan tidak membuat atau mengubah data bisnis. Jalankan setelah migrasi pada branch development atau database uji, bukan sebagai pengganti uji otorisasi lintas-tenant menggunakan sesi nyata.
+Jangan isi `VITE_HR_API_BASE_URL` sebelum URL fungsi, health check, autentikasi, dan uji tenant isolation berhasil diverifikasi. Jangan menerapkan migrasi ke branch production sebelum seluruh migrasi, backup, rollback, dan penerimaan pengguna ditinjau.
