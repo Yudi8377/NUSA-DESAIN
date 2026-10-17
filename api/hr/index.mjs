@@ -88,8 +88,10 @@ export default {
         const body = await readJson(request);
         const orgName = safeText(body.name, 120, 'Nama workspace');
         const email = typeof identity.email === 'string' ? identity.email.trim().toLowerCase() : '';
-        const emailVerified = identity.email_verified === true || identity.emailVerified === true;
-        if (!email || !emailVerified) throw Object.assign(new Error('Verifikasi email diperlukan sebelum membuat workspace.'), { status: 403 });
+        // The current Neon Auth branch explicitly has require_email_verification=false.
+        // Require a signed email claim, but do not block onboarding on a verification
+        // state that the configured identity provider does not enforce yet.
+        if (!email) throw Object.assign(new Error('Akun login tidak memiliki alamat email.'), { status: 403 });
         const displayName = typeof identity.name === 'string' && identity.name.trim() ? identity.name.trim().slice(0, 160) : email.split('@')[0];
         const client = await pool.connect();
         try {
