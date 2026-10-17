@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import AIOutputSheet from './AIOutputSheet'
 import AIGenerationConnector from './AIGenerationConnector'
-import { Copy, Image, Film, Box, FileText, Sparkles, WandSparkles, ShieldCheck, ArrowUpRight, Check, CircleAlert } from 'lucide-react'
+import { Copy, Image, Film, Box, FileText, Sparkles, WandSparkles, ShieldCheck, ArrowUpRight, Check } from 'lucide-react'
 
 const modes = [
   { id: 'concept', label: 'Konsep arsitektur', detail: 'Alternatif massa dan gaya bangunan', icon: Box },
