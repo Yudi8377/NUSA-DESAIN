@@ -10,16 +10,17 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
-  group: nusa-design-hr-api-dev
+  group: nusa-design-hr-api
   cancel-in-progress: false
 
 jobs:
   bundle:
-    name: Build and package HR API
+    name: Build, smoke-test, and deploy HR API
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,6 +33,10 @@ jobs:
           mkdir -p api/hr/dist
           api/hr/node_modules/.bin/esbuild api/hr/index.mjs --bundle --platform=node --target=node24 --format=esm --outfile=api/hr/dist/index.mjs --external:pg-native
           node --check api/hr/dist/index.mjs
+      - name: Run API smoke tests
+        run: npm --prefix api/hr test
+      - name: Package function
+        run: |
           cd api/hr/dist
           zip -q ../nusa-design-hr-api.zip index.mjs
       - name: Upload deployable bundle
@@ -41,18 +46,64 @@ jobs:
           path: api/hr/nusa-design-hr-api.zip
           if-no-files-found: error
           retention-days: 14
-      - name: Deploy to isolated Neon development branch when credentials are configured
+      - name: Deploy to development, verify, then promote to production
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$NEON_API_KEY" ]; then
-            echo "NEON_API_KEY is not configured; bundle artifact created, deployment skipped."
+            echo "NEON_API_KEY is not configured; bundle and smoke tests passed, deployment skipped."
             exit 0
           fi
-          curl --fail-with-body --silent --show-error \
-            -X POST \
-            -H "Authorization: Bearer $NEON_API_KEY" \
-            -F "zip=@api/hr/nusa-design-hr-api.zip;type=application/zip" \
-            -F "runtime=nodejs24" \
-            -F 'environment={"ALLOWED_ORIGINS":"https://yudi8377.github.io,http://localhost:5173"}' \
-            "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/br-curly-flower-b4zhtzqp/functions/hrapi/deployments"
+          deploy_function() {
+            BRANCH_ID="$1"
+            ORIGINS="$2"
+            curl --fail-with-body --silent --show-error \
+              -X POST \
+              -H "Authorization: Bearer $NEON_API_KEY" \
+              -F "zip=@api/hr/nusa-design-hr-api.zip;type=application/zip" \
+              -F "runtime=nodejs24" \
+              -F "environment={\"ALLOWED_ORIGINS\":\"$ORIGINS\"}" \
+              "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/$BRANCH_ID/functions/hrapi/deployments"
+            for attempt in $(seq 1 24); do
+              DETAILS=$(curl --fail-with-body --silent --show-error \
+                -H "Authorization: Bearer $NEON_API_KEY" \
+                "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/$BRANCH_ID/functions/hrapi")
+              URL=$(printf '%s' "$DETAILS" | jq -r '.invocation_url // .function.invocation_url // .current_deployment.invocation_url // empty')
+              STATUS=$(printf '%s' "$DETAILS" | jq -r '.current_deployment.status // .deployment.status // empty')
+              if [ -n "$URL" ] && [ "$STATUS" = "completed" ]; then
+                printf '%s' "$URL"
+                return 0
+              fi
+              if [ "$STATUS" = "failed" ]; then echo "Neon Function deployment failed: $DETAILS" >&2; return 1; fi
+              sleep 5
+            done
+            echo "Timed out waiting for Neon Function deployment: $DETAILS" >&2
+            return 1
+          }
+          verify_function() {
+            URL="$1"
+            HEALTH=$(curl --fail-with-body --silent --show-error "$URL/health")
+            echo "$HEALTH" | jq -e '.data.status == "ok" and .data.service == "nusa-design-api"'
+            CODE=$(curl --silent --output /tmp/nusa-unauthorized.json --write-out '%{http_code}' "$URL/api/organizations")
+            test "$CODE" = "401"
+            jq -e '.error.message == "Sesi login diperlukan."' /tmp/nusa-unauthorized.json
+          }
+          DEV_URL=$(deploy_function "br-curly-flower-b4zhtzqp" "https://yudi8377.github.io,http://localhost:5173")
+          echo "Development function deployed: $DEV_URL"
+          verify_function "$DEV_URL"
+          PROD_URL=$(deploy_function "br-wispy-feather-b4t2xxmn" "https://yudi8377.github.io")
+          echo "Production function deployed and build completed: $PROD_URL"
+          verify_function "$PROD_URL"
+          PROD_AUTH_URL="https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth"
+          set_repo_variable() {
+            NAME="$1"; VALUE="$2"
+            if gh api "repos/$GITHUB_REPOSITORY/actions/variables/$NAME" >/dev/null 2>&1; then
+              gh api "repos/$GITHUB_REPOSITORY/actions/variables/$NAME" -X PATCH -f value="$VALUE" >/dev/null
+            else
+              gh api "repos/$GITHUB_REPOSITORY/actions/variables" -X POST -f name="$NAME" -f value="$VALUE" >/dev/null
+            fi
+          }
+          set_repo_variable "VITE_HR_API_BASE_URL" "$PROD_URL"
+          set_repo_variable "VITE_NEON_AUTH_URL" "$PROD_AUTH_URL"
+          gh workflow run pages.yml --ref main
