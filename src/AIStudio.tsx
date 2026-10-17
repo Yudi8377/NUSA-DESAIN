@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import AIOutputSheet from './AIOutputSheet'
+import AIGenerationConnector from './AIGenerationConnector'
 import { Copy, Image, Film, Box, FileText, Sparkles, WandSparkles, ShieldCheck, ArrowUpRight, Check, CircleAlert } from 'lucide-react'
 
 const modes = [
@@ -94,7 +95,7 @@ export default function AIStudio() {
           <div className="ai-mode-list">
             {modes.map((item) => <button key={item.id} className={mode === item.id ? 'ai-mode-card selected' : 'ai-mode-card'} onClick={() => { setMode(item.id); setBriefReady(false) }}><span className="ai-mode-icon"><item.icon size={18}/></span><span className="ai-mode-copy"><b>{item.label}</b><small>{item.detail}</small></span><span className="ai-radio">{mode === item.id ? <Check size={12}/> : null}</span></button>)}
           </div>
-          <div className="ai-provider-note"><CircleAlert size={16}/><div><b>Konektor generasi belum diaktifkan</b><p>Modul ini saat ini menyiapkan brief. Pembuatan gambar/video nyata memerlukan backend dan kredensial penyedia AI yang dikonfigurasi aman.</p></div></div>
+          <AIGenerationConnector mode={mode} prompt={prompt} projectName={projectName} />
           <a className="ai-reference-link" href="https://github.com/Anil-matcha/Open-Generative-AI" target="_blank" rel="noreferrer">Lihat proyek sumber Open Generative AI <ArrowUpRight size={14}/></a>
         </section>
       </div>
