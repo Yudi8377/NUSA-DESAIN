@@ -34,7 +34,7 @@ export default {
   const code=request.headers.get("x-ai-studio-code")||""
   if(!env.AI_STUDIO_ACCESS_CODE||code!==env.AI_STUDIO_ACCESS_CODE)return cors(json({error:"Kode akses Studio AI tidak valid atau belum dikonfigurasi."},401),origin,env)
   const ip=request.headers.get("cf-connecting-ip")||"unknown"
-  if(!limit(ip))return cors(json({error:"Batas permintaan tercapai. Coba lagi satu menit kemudian."},429),origin,env)
+  if(request.method==="POST" && !limit(ip))return cors(json({error:"Batas permintaan tercapai. Coba lagi satu menit kemudian."},429),origin,env)
   try{
    if(url.pathname==="/api/generate/status"&&request.method==="GET"){
     const id=url.searchParams.get("id")||""
