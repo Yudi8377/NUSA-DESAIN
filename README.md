@@ -73,7 +73,7 @@ Migrasi `0003` AI Studio dan `0004` fondasi SDM telah diterapkan pada branch dev
 
 Fondasi UI, viewer 3D, dan metadata AI Studio merupakan tahap awal, bukan klaim bahwa seluruh modul ERP telah selesai. Sebelum go-live, konfigurasikan autentikasi, API backend, kebijakan akses berbasis peran, secret deployment, penyimpanan aset privat, backup, monitoring, dan uji penerimaan.
 
-UI login dan onboarding workspace native kini menggunakan Neon Auth SDK. Source API SDM tersedia di `api/hr/index.mjs` dengan verifikasi JWT, membership/role server-side, dan konteks tenant per transaksi. Namun deployment fungsi API, konfigurasi URL saat build GitHub Pages, uji end-to-end dua tenant, dan verifikasi CI/build masih harus lulus sebelum disebut live komersial. Neon Auth dan migrasi HR tetap hanya di branch development `nusa-design-dev-ready`; branch database production tidak diubah.
+UI login dan onboarding workspace native kini menggunakan Neon Auth SDK. Source API SDM tersedia di `api/hr/index.mjs` dengan verifikasi JWT, membership/role server-side, dan konteks tenant per transaksi. Namun deployment fungsi API, konfigurasi URL saat build GitHub Pages, uji end-to-end dua tenant, dan verifikasi CI/build masih harus lulus sebelum disebut live komersial. Neon Auth telah aktif pada branch development dan production; origin GitHub Pages telah masuk allowlist pada keduanya. Migrasi 0001–0004 telah diterapkan ke database production yang sebelumnya belum memiliki tabel aplikasi. API function belum terdaftar pada Neon saat verifikasi terakhir; workflow deployment memerlukan secret GitHub Actions `NEON_API_KEY` untuk menjalankan promosi dan konfigurasi URL aplikasi.
 
 
 ## K3 & Keselamatan (OpenStatus-inspired)
