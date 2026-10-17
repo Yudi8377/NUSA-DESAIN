@@ -19,6 +19,10 @@ Status: **kode endpoint tersedia di repository; deployment API dan uji end-to-en
 | GET | `/api/organizations` | Workspace milik pengguna yang login | JWT valid; daftar diturunkan dari keanggotaan server |
 | POST | `/api/organizations` | Membuat workspace dan menjadikan pembuat sebagai owner | JWT valid dan email terverifikasi |
 | GET | `/api/hr/employees?limit=100` | Direktori pegawai | JWT + header `X-Organization-Id` + keanggotaan; role owner/admin/hr/project_manager |
+| GET | `/api/projects?limit=100` | Daftar proyek | JWT + workspace aktif + keanggotaan organisasi |
+| POST | `/api/projects` | Membuat proyek | JWT + workspace aktif + role owner/admin/project_manager/architect |
+| GET | `/api/projects/:projectId/tasks` | Daftar tugas proyek | JWT + workspace aktif + keanggotaan organisasi |
+| POST | `/api/projects/:projectId/tasks` | Membuat tugas proyek | JWT + workspace aktif + role owner/admin/project_manager/architect/engineer |
 | POST | `/api/hr/employees` | Membuat pegawai | JWT + workspace aktif + role owner/admin/hr |
 
 ### Header
