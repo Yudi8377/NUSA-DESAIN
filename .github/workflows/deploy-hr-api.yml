@@ -74,7 +74,7 @@ jobs:
                 -H "Authorization: Bearer $NEON_API_KEY" \
                 "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/$BRANCH_ID/functions/hrapi")
               URL=$(printf '%s' "$DETAILS" | jq -r '.invocation_url // .function.invocation_url // .current_deployment.invocation_url // empty')
-              STATUS=$(printf '%s' "$DETAILS" | jq -r '.current_deployment.status // .deployment.status // empty')
+              STATUS=$(printf '%s' "$DETAILS" | jq -r '.current_deployment.status // .deployment.status // .function.current_deployment.status // .function.active_deployment.status // empty')
               if [ -n "$URL" ] && [ "$STATUS" = "completed" ]; then
                 printf '%s' "$URL"
                 return 0
@@ -86,7 +86,7 @@ jobs:
             return 1
           }
           verify_function() {
-            URL="$1"
+            URL="${1%/}"
             HEALTH=$(curl --fail-with-body --silent --show-error "$URL/health")
             echo "$HEALTH" | jq -e '.data.status == "ok" and .data.service == "nusa-design-api"'
             READY=$(curl --fail-with-body --silent --show-error "$URL/ready")
