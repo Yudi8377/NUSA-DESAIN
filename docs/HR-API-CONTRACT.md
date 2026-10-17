@@ -15,7 +15,8 @@ Status: **kode endpoint tersedia di repository; deployment API dan uji end-to-en
 
 | Method | Path | Tujuan | Otorisasi |
 |---|---|---|---|
-| GET | `/health` | Status proses dan nama branch | Publik; tidak membocorkan detail database |
+| GET | `/health` | Liveness proses | Publik; tidak membocorkan detail database |
+| GET | `/ready` | Readiness koneksi database dan konfigurasi auth | Publik; mengembalikan 503 jika dependency belum siap tanpa detail sensitif |
 | GET | `/api/organizations` | Workspace milik pengguna yang login | JWT valid; daftar diturunkan dari keanggotaan server |
 | POST | `/api/organizations` | Membuat workspace dan menjadikan pembuat sebagai owner | JWT valid dan email terverifikasi |
 | GET | `/api/hr/employees?limit=100` | Direktori pegawai | JWT + header `X-Organization-Id` + keanggotaan; role owner/admin/hr/project_manager |
@@ -48,7 +49,7 @@ Semua respons sukses menggunakan `{ "data": ..., "meta": { "requestId": "..." } 
 Workflow `.github/workflows/deploy-hr-api.yml` membangun bundle, menjalankan smoke tests, lalu—jika secret repository `NEON_API_KEY` tersedia—mendeploy ke branch development terlebih dahulu. Setelah health check dan penolakan request tanpa token lulus, workflow mempromosikan bundle yang sama ke branch production, menguji endpoint produksi, memperbarui repository variables publik `VITE_HR_API_BASE_URL` dan `VITE_NEON_AUTH_URL`, lalu memicu deploy GitHub Pages. Project: `gentle-tooth-09855567`; development: `br-curly-flower-b4zhtzqp`; production: `br-wispy-feather-b4t2xxmn`.
 
 Setelah deployment:
-1. `GET <function-url>/health` harus mengembalikan HTTP 200.
+1. `GET <function-url>/health` dan `GET <function-url>/ready` harus mengembalikan HTTP 200.
 2. Tanpa Bearer token, `GET /api/organizations` harus HTTP 401.
 3. Token invalid harus HTTP 401.
 4. ID workspace bukan anggota harus HTTP 403.
