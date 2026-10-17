@@ -1,12 +1,15 @@
 import { createAuthClient } from '@neondatabase/auth'
+import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// GitHub Pages and Neon Auth are different origins. Include the session
-// cookie on cross-origin Auth requests so token() can mint a JWT.
+// The Neon Auth adapter accepts fetch options through its factory, not the
+// createAuthClient config. Include cross-origin cookies for GitHub Pages.
 export const authClient: any = authUrl
   ? createAuthClient(authUrl, {
-      fetchOptions: { credentials: 'include' },
+      adapter: BetterAuthReactAdapter({
+        fetchOptions: { credentials: 'include' },
+      }),
     })
   : null
 export const isAuthConfigured = Boolean(authUrl)
