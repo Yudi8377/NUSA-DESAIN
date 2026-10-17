@@ -108,7 +108,7 @@ export default function HRManagement() {
     {apiError && <div className="hrms-demo-notice" role="alert"><ShieldAlert size={16}/><span>{apiError} {isHrApiConfigured ? 'Periksa konfigurasi API dan sesi akses; data demo tidak akan ditampilkan sebagai pengganti.' : ''}</span></div>}
     {notice && <div className="hrms-demo-notice" role="status"><CheckCircle2 size={16}/><span>{notice}</span><button className="hrms-action" onClick={() => setNotice('')}>Tutup</button></div>}
     <section className="hrms-metrics">
-      <Metric icon={<Users size={17}/>} title="Total karyawan contoh" value={String(48 + Math.max(0, people.length - initialPeople.length))} note="Bukan headcount perusahaan terverifikasi" />
+      <Metric icon={<Users size={17}/>} title={isHrApiConfigured ? "Karyawan terdaftar" : "Total karyawan contoh"} value={isHrApiConfigured ? (apiLoading ? "…" : String(people.length)) : String(48 + Math.max(0, people.length - initialPeople.length))} note={isHrApiConfigured ? "Jumlah hasil API yang dimuat" : "Bukan headcount perusahaan terverifikasi"} />
       <Metric icon={<CheckCircle2 size={17}/>} title="Hadir hari ini" value="41" note="Ilustrasi; perlu data absensi nyata" />
       <Metric icon={<CalendarClock size={17}/>} title="Tugas menunggu" value={String(pendingCount)} note="Status antrean hanya pada sesi ini" />
       <Metric icon={<WalletCards size={17}/>} title="Payroll periode ini" value="Draft" note="Belum dihitung atau disahkan" />
@@ -124,7 +124,7 @@ export default function HRManagement() {
           {filteredPeople.map((person, index) => <tr key={person.initials + person.name + index}><td><div className="hrms-employee"><span className="hrms-employee-avatar">{person.initials}</span><span><b>{person.name}</b><small>{person.role}</small></span></div></td><td>{person.team}</td><td><span className={`hrms-status ${person.tone === 'leave' ? 'leave' : person.tone === 'pending' ? 'pending' : ''}`}>{person.status}</span></td></tr>)}
           {filteredPeople.length === 0 && <tr><td colSpan={3}>{apiLoading ? 'Memuat data karyawan…' : isHrApiConfigured && apiError ? 'Data tidak tersedia karena API gagal diakses.' : 'Tidak ada personel yang cocok dengan pencarian.'}</td></tr>}
         </tbody></table></div>
-        <div className="hrms-actions" style={{marginTop:14}}><button className="hrms-action" onClick={() => { setQuery(''); setTeamFilter('Semua tim') }}><UserRoundSearch size={13}/> Reset filter</button><button className="hrms-action primary" onClick={() => setShowAddForm(value => !value)}><UserPlus size={13}/> {showAddForm ? 'Tutup formulir' : 'Tambah contoh karyawan'}</button></div>
+        <div className="hrms-actions" style={{marginTop:14}}><button className="hrms-action" onClick={() => { setQuery(''); setTeamFilter('Semua tim') }}><UserRoundSearch size={13}/> Reset filter</button><button className="hrms-action primary" onClick={() => setShowAddForm(value => !value)}><UserPlus size={13}/> {showAddForm ? 'Tutup formulir' : isHrApiConfigured ? 'Tambah karyawan' : 'Tambah contoh karyawan'}</button></div>
         {showAddForm && <form className="hrms-add-form" onSubmit={addPerson}>
           {isHrApiConfigured && <label>Nomor karyawan<input required value={newEmployeeNumber} onChange={event => setNewEmployeeNumber(event.target.value)} placeholder="Contoh: ND-2026-001"/></label>}
           <label>Nama lengkap<input required value={newName} onChange={event => setNewName(event.target.value)} placeholder="Contoh: Nabila Putri"/></label>
@@ -141,7 +141,7 @@ export default function HRManagement() {
       </article>
     </section>
     <section><div className="hrms-panel-head"><div><h2>Kapabilitas SDM</h2><p>Fitur yang akan dibangun secara native untuk kebutuhan NUSA DESIGN</p></div></div><div className="hrms-module-grid">{modules.map(item => <article className="hrms-module-card" key={item.title}><div className="hrms-module-icon"><item.icon size={17}/></div><div><h3>{item.title}</h3><p>{item.desc}</p></div></article>)}</div></section>
-    <div className="hrms-footer-note">Tanggal tampilan: {today}. Data yang ditambah atau status yang diubah tidak bertahan setelah sesi browser dimuat ulang. Payroll Indonesia harus melalui validasi aturan PPh 21, BPJS, THR, lembur, dan kebijakan perusahaan sebelum produksi.</div>
+    <div className="hrms-footer-note">Tanggal tampilan: {today}. {isHrApiConfigured ? 'Data direktori dimuat melalui API; antrean tugas dan payroll masih demonstrasi lokal.' : 'Data yang ditambah atau status yang diubah tidak bertahan setelah sesi browser dimuat ulang.'} Payroll Indonesia harus melalui validasi aturan PPh 21, BPJS, THR, lembur, dan kebijakan perusahaan sebelum produksi.</div>
   </div>
 }
 function Metric({icon,title,value,note}:{icon:React.ReactNode;title:string;value:string;note:string}) {
