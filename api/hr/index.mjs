@@ -178,7 +178,7 @@ export default {
         const startDate = body.start_date || null;
         const targetDate = body.target_end_date || null;
         for (const [dateValue, label] of [[startDate,'Tanggal mulai'],[targetDate,'Target selesai']]) {
-          if (dateValue !== null && (typeof dateValue !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateValue))) throw Object.assign(new Error(`${label} harus berformat YYYY-MM-DD.`), { status: 400 });
+          if (dateValue !== null && (typeof dateValue !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateValue))) throw Object.assign(new Error(`${label} harus berformat YYYY-MM-DD.`), { status: 400 });
         }
         const row = await withIdentity(identity, orgId, async (client, actor) => {
           const result = await client.query(`INSERT INTO public.projects (organization_id, code, name, project_type, status, location, start_date, target_end_date, budget_amount, created_by)
@@ -191,7 +191,7 @@ export default {
         }, ['owner','admin','project_manager','architect']);
         return json({ data: row, meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
       }
-      const taskPath = url.pathname.match(/^\\/api\\/projects\\/([0-9a-f-]{36})\\/tasks$/i);
+      const taskPath = url.pathname.match(/^\/api\/projects\/([0-9a-f-]{36})\/tasks$/i);
       if (taskPath && request.method === 'GET') {
         const orgId = request.headers.get('x-organization-id');
         const projectId = taskPath[1];
@@ -213,7 +213,7 @@ export default {
         const priority = body.priority || 'normal';
         if (!['low','normal','high','urgent'].includes(priority)) throw Object.assign(new Error('Prioritas tugas tidak valid.'), { status: 400 });
         const dueDate = body.due_date || null;
-        if (dueDate !== null && (typeof dueDate !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dueDate))) throw Object.assign(new Error('Tenggat harus berformat YYYY-MM-DD.'), { status: 400 });
+        if (dueDate !== null && (typeof dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate))) throw Object.assign(new Error('Tenggat harus berformat YYYY-MM-DD.'), { status: 400 });
         const row = await withIdentity(identity, orgId, async (client, actor) => {
           const result = await client.query(`INSERT INTO public.project_tasks (organization_id, project_id, title, description, priority, due_date)
             SELECT $1, p.id, $3, $4, $5, $6 FROM public.projects p WHERE p.id=$2 AND p.organization_id=$1
