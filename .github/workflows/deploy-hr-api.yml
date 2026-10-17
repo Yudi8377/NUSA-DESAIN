@@ -101,15 +101,3 @@ jobs:
           PROD_URL=$(deploy_function "br-wispy-feather-b4t2xxmn" "production" "https://yudi8377.github.io" "https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth" "https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth/.well-known/jwks.json")
           echo "Production function deployed and build completed: $PROD_URL"
           verify_function "$PROD_URL"
-          PROD_AUTH_URL="https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth"
-          set_repo_variable() {
-            NAME="$1"; VALUE="$2"
-            if gh api "repos/$GITHUB_REPOSITORY/actions/variables/$NAME" >/dev/null 2>&1; then
-              gh api "repos/$GITHUB_REPOSITORY/actions/variables/$NAME" -X PATCH -f value="$VALUE" >/dev/null
-            else
-              gh api "repos/$GITHUB_REPOSITORY/actions/variables" -X POST -f name="$NAME" -f value="$VALUE" >/dev/null
-            fi
-          }
-          set_repo_variable "VITE_HR_API_BASE_URL" "$PROD_URL"
-          set_repo_variable "VITE_NEON_AUTH_URL" "$PROD_AUTH_URL"
-          gh workflow run pages.yml --ref main
