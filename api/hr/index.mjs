@@ -104,6 +104,7 @@ export default {
           const slug = `${slugBase}-${randomUUID().slice(0, 8)}`;
           const org = await client.query('INSERT INTO public.organizations (name, slug) VALUES ($1,$2) RETURNING id, name, slug', [orgName, slug]);
           await client.query("INSERT INTO public.organization_members (organization_id, user_id, role) VALUES ($1,$2,'owner')", [org.rows[0].id, userId]);
+          await client.query('INSERT INTO public.audit_events (organization_id, actor_user_id, action, entity_type, entity_id, details) VALUES ($1,$2,$3,$4,$5,$6::jsonb)', [org.rows[0].id, userId, 'organization.created', 'organization', org.rows[0].id, JSON.stringify({ slug })]);
           await client.query('COMMIT');
           return json({ data: org.rows[0], meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
         } catch (error) { await client.query('ROLLBACK').catch(() => {}); throw error; }
@@ -143,7 +144,9 @@ export default {
             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
             RETURNING id, employee_number, full_name, department, job_title, employment_status, employment_type, work_email`,
             [actor.orgId, employeeNumber, fullName, department, jobTitle, employmentType, email, actor.userId]);
-          return result.rows[0];
+          const employee = result.rows[0];
+          await client.query('INSERT INTO public.audit_events (organization_id, actor_user_id, action, entity_type, entity_id, details) VALUES ($1,$2,$3,$4,$5,$6::jsonb)', [actor.orgId, actor.userId, 'hr.employee.created', 'hr_employee', employee.id, JSON.stringify({ employee_number: employeeNumber, employment_type: employmentType })]);
+          return employee;
         }, ['owner','admin','hr']);
         return json({ data: row, meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
       }
