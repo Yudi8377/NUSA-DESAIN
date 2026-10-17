@@ -87,8 +87,9 @@ Jangan mengembalikan stack trace, query SQL, connection string, credential, atau
 ## Status implementasi
 
 - Database: migrasi 0004_hr_management.sql telah diterapkan pada branch development Neon nusa-design-dev-ready; RLS dan empat tabel HR diverifikasi.
-- UI: saat ini masih demonstrasi lokal, belum memanggil endpoint di atas.
-- API, autentikasi aplikasi, audit event otomatis, pengujian lintas tenant, dan payroll: belum diimplementasikan.
+- UI: tersedia client TypeScript untuk GET/POST direktori pada `src/services/hrApi.ts`. Tanpa `VITE_HR_API_BASE_URL`, UI tetap pada mode demo; saat URL dikonfigurasi, direktori memakai API dan tidak jatuh diam-diam ke data demo jika request gagal.
+- API client memakai cookie/session credentials dan mengharapkan envelope `{ data: ... }`; server lintas-origin harus mengatur CORS secara ketat dan perlindungan CSRF untuk operasi tulis.
+- Backend/API aktual, autentikasi aplikasi, audit event otomatis, pengujian lintas tenant, dan payroll: belum diimplementasikan. Jangan mengisi `VITE_HR_API_BASE_URL` sebelum endpoint server tepercaya benar-benar tersedia.
 
 
 ## Regression check database
