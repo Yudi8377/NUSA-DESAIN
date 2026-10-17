@@ -45,7 +45,7 @@ Menu **Anatomi Bangunan** menyediakan diagram isometrik konseptual yang dapat di
 
 Menu **SDM & Payroll** dibangun sebagai modul native NUSA DESIGN. Frappe HRMS hanya menjadi referensi kebutuhan dan alur kerja; tidak ada instance, API, kredensial, atau sinkronisasi Frappe yang digunakan. UI demonstrasi menyediakan pencarian/filter direktori dan simulasi tindakan lokal, tetapi data belum tersimpan ke database dan payroll belum aktif.
 
-Baca [dokumen Adopsi Fitur SDM & Payroll](docs/ADOPSI-FITUR-SDM-PAYROLL.md) untuk arsitektur native, pemetaan kebutuhan, kontrol akses, dan roadmap. Fondasi skema HR disiapkan terpisah pada migrasi `database/migrations/0004_hr_management.sql`; migrasi harus diuji pada branch development sebelum diterapkan ke database bersama.
+Baca [dokumen Adopsi Fitur SDM & Payroll](docs/ADOPSI-FITUR-SDM-PAYROLL.md) untuk arsitektur native, pemetaan kebutuhan, kontrol akses, dan roadmap, serta [kontrak API SDM](docs/HR-API-CONTRACT.md) untuk rancangan endpoint aman. Fondasi skema HR tersedia pada migrasi `database/migrations/0004_hr_management.sql` dan telah diterapkan serta diverifikasi pada branch development Neon `nusa-design-dev-ready`; belum diterapkan ke production.
 
 ## Pengembangan lokal
 
