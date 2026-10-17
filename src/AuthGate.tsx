@@ -61,8 +61,8 @@ export default function AuthGate() {
       try {
         const result = await authClient.getSession()
         if (result?.error) throw new Error(result.error.message || 'Gagal memeriksa sesi.')
-        const session = result?.data?.session
-        if (!session?.user) { if (active) setPhase('signed-out'); return }
+        const session = result?.data?.user || result?.data?.session?.user
+        if (!session) { if (active) setPhase('signed-out'); return }
         await loadWorkspace()
       } catch (error) {
         if (active) { setPhase('error'); setMessage(error instanceof Error ? error.message : 'Gagal memuat sesi.') }
@@ -89,7 +89,7 @@ export default function AuthGate() {
         : await authClient.signIn.email({ email: email.trim(), password })
       if (result?.error) throw new Error(result.error.message || 'Autentikasi gagal.')
       const sessionResult = await authClient.getSession()
-      if (!sessionResult?.data?.session?.user) {
+      if (!(sessionResult?.data?.user || sessionResult?.data?.session?.user)) {
         setMessage(isSignUp ? 'Pendaftaran dikirim. Verifikasi email Anda, lalu masuk kembali.' : 'Sesi belum aktif. Periksa verifikasi email atau coba masuk kembali.')
         return
       }
