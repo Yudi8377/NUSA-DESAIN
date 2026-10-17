@@ -83,6 +83,16 @@ export default {
       return json({ data: { status: 'ok', service: 'nusa-design-api', branch: process.env.NEON_BRANCH || 'unknown' }, meta: { requestId } }, 200, { ...headers, 'X-Request-Id': requestId });
     }
     try {
+    if (request.method === 'GET' && url.pathname === '/ready') {
+      try {
+        if (!jwks || !issuer) throw new Error('auth_config_missing');
+        await pool.query('SELECT 1');
+        return json({ data: { status: 'ready', service: 'nusa-design-api', branch: process.env.NEON_BRANCH || 'unknown' }, meta: { requestId } }, 200, { ...headers, 'X-Request-Id': requestId });
+      } catch (error) {
+        console.error('readiness_check_failed', requestId, error?.message || 'unknown');
+        return fail('Layanan database atau autentikasi belum siap.', 503, requestId, headers);
+      }
+    }
       if (request.method === 'POST' && url.pathname === '/api/organizations') {
         const identity = await authenticate(request);
         const body = await readJson(request);
