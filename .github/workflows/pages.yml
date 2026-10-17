@@ -31,7 +31,7 @@ jobs:
         env:
           VITE_AI_API_URL: ${{ vars.VITE_AI_API_URL }}
           VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth' }}
-          VITE_HR_API_BASE_URL: ${{ vars.VITE_HR_API_BASE_URL }}
+          VITE_HR_API_BASE_URL: ${{ vars.VITE_HR_API_BASE_URL || 'https://br-wispy-feather-b4t2xxmn-hrapi.compute.c-6.us-east-2.aws.neon.tech' }}
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
