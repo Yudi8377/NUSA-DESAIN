@@ -89,3 +89,8 @@ Jangan mengembalikan stack trace, query SQL, connection string, credential, atau
 - Database: migrasi 0004_hr_management.sql telah diterapkan pada branch development Neon nusa-design-dev-ready; RLS dan empat tabel HR diverifikasi.
 - UI: saat ini masih demonstrasi lokal, belum memanggil endpoint di atas.
 - API, autentikasi aplikasi, audit event otomatis, pengujian lintas tenant, dan payroll: belum diimplementasikan.
+
+
+## Regression check database
+
+Skrip `database/tests/0004_hr_security_assertions.sql` memeriksa keberadaan empat tabel HR, status RLS, sembilan policy yang diwajibkan, dan konfigurasi helper role. Skrip ini bersifat read-only dan tidak membuat atau mengubah data bisnis. Jalankan setelah migrasi pada branch development atau database uji, bukan sebagai pengganti uji otorisasi lintas-tenant menggunakan sesi nyata.
