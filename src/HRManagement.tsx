@@ -45,7 +45,7 @@ export default function HRManagement() {
     const name = newName.trim()
     const role = newRole.trim()
     if (!name || !role) return
-    const initials = name.split(/\\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('')
+    const initials = name.split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('')
     setPeople(current => [...current, { initials, name, role, team: newTeam, status: 'Perlu verifikasi', tone: 'pending' }])
     setNewName(''); setNewRole(''); setNewTeam('Desain'); setShowAddForm(false)
     setNotice('Karyawan contoh ditambahkan pada sesi browser ini saja; belum disimpan ke database.')
