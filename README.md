@@ -45,7 +45,7 @@ Menu **Anatomi Bangunan** menyediakan diagram isometrik konseptual yang dapat di
 
 Menu **SDM & Payroll** dibangun sebagai modul native NUSA DESIGN. Frappe HRMS hanya menjadi referensi kebutuhan dan alur kerja; tidak ada instance, API, kredensial, atau sinkronisasi Frappe yang digunakan. UI demonstrasi menyediakan pencarian/filter direktori dan simulasi tindakan lokal, tetapi data belum tersimpan ke database dan payroll belum aktif.
 
-Baca [dokumen Adopsi Fitur SDM & Payroll](docs/ADOPSI-FITUR-SDM-PAYROLL.md) untuk arsitektur native, pemetaan kebutuhan, kontrol akses, dan roadmap, serta [kontrak API SDM](docs/HR-API-CONTRACT.md) untuk rancangan endpoint aman. Fondasi skema HR tersedia pada migrasi `database/migrations/0004_hr_management.sql` dan telah diterapkan serta diverifikasi pada branch development Neon `nusa-design-dev-ready`; belum diterapkan ke production.
+Baca [dokumen Adopsi Fitur SDM & Payroll](docs/ADOPSI-FITUR-SDM-PAYROLL.md) untuk arsitektur native, pemetaan kebutuhan, kontrol akses, dan roadmap, serta [kontrak API SDM](docs/HR-API-CONTRACT.md) untuk rancangan endpoint aman. Fondasi skema HR tersedia pada migrasi `database/migrations/0004_hr_management.sql`. Migrasi fondasi, tenant RLS, AI Studio, dan HR (0001–0004) kini telah diterapkan pada branch Neon `production` dan `nusa-design-dev-ready`; tabel HR memiliki RLS aktif dan sembilan policy yang diverifikasi.
 
 ## Pengembangan lokal
 
@@ -67,7 +67,7 @@ npm run preview
 
 Migrasi awal tersedia di `database/migrations/0001_nusa_design_foundation.sql`, baseline isolasi tenant di `database/migrations/0002_tenant_rls_baseline.sql`, dan metadata AI Studio di `database/migrations/0003_ai_studio_jobs_assets.sql`.
 
-Migrasi `0003` AI Studio dan `0004` fondasi SDM telah diterapkan pada branch development Neon `nusa-design-dev-ready`. Migrasi `0004` diverifikasi: empat tabel HR tersedia, Row-Level Security aktif, serta kebijakan dan constraint terbentuk. Keduanya belum diterapkan ke branch production. Kebijakan database belum membuktikan keamanan produksi sampai API tepercaya memvalidasi sesi, menetapkan konteks tenant per transaksi, dan melewati pengujian lintas organisasi.
+Migrasi `0003` AI Studio dan `0004` fondasi SDM telah diterapkan pada branch development Neon `nusa-design-dev-ready`. Migrasi `0004` diverifikasi: empat tabel HR tersedia, Row-Level Security aktif, serta kebijakan dan constraint terbentuk. Migrasi 0003 dan 0004 telah diterapkan juga pada branch production setelah memverifikasi bahwa schema aplikasi masih kosong. Kebijakan database belum membuktikan keamanan produksi sampai API tepercaya memvalidasi sesi, menetapkan konteks tenant per transaksi, dan melewati pengujian lintas organisasi.
 
 ## Status
 
