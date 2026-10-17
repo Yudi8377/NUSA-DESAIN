@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, CheckCircle2, Clock3, FileCheck2, GraduationCap, ShieldAlert, Users, WalletCards, ClipboardCheck, ArrowRight, UserPlus, CalendarClock, Search, Check, X, UserRoundSearch } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock3, FileCheck2, GraduationCap, ShieldAlert, Users, WalletCards, ClipboardCheck, UserPlus, CalendarClock, Search, Check, X, UserRoundSearch } from 'lucide-react'
 
 type Person = { initials: string; name: string; role: string; team: string; status: string; tone: 'present' | 'leave' | 'pending' }
 const initialPeople: Person[] = [
