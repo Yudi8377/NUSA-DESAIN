@@ -29,9 +29,9 @@ function fail(message, status, requestId, headers) {
 async function authenticate(request) {
   if (!jwks || !issuer) throw Object.assign(new Error('Authentication is not configured.'), { status: 503 });
   const header = request.headers.get('authorization') || '';
-  if (!/^Bearer\\s+\\S+$/i.test(header)) throw Object.assign(new Error('Sesi login diperlukan.'), { status: 401 });
+  if (!/^Bearer\s+\S+$/i.test(header)) throw Object.assign(new Error('Sesi login diperlukan.'), { status: 401 });
   try {
-    const { payload } = await jwtVerify(header.replace(/^Bearer\\s+/i, ''), jwks, { issuer });
+    const { payload } = await jwtVerify(header.replace(/^Bearer\s+/i, ''), jwks, { issuer });
     if (typeof payload.sub !== 'string' || !payload.sub) throw new Error('Missing subject');
     return payload;
   } catch {
@@ -135,7 +135,7 @@ export default {
         const employmentType = body.employment_type || 'permanent';
         if (!['permanent','contract','freelance','intern','daily'].includes(employmentType)) throw Object.assign(new Error('Jenis hubungan kerja tidak valid.'), { status: 400 });
         const email = body.work_email == null || body.work_email === '' ? null : safeText(body.work_email, 254, 'Email kerja');
-        if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw Object.assign(new Error('Format email kerja tidak valid.'), { status: 400 });
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error('Format email kerja tidak valid.'), { status: 400 });
         const row = await withIdentity(identity, orgId, async (client, actor) => {
           const result = await client.query(`INSERT INTO public.hr_employees (organization_id, employee_number, full_name, department, job_title, employment_type, work_email, created_by)
             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
