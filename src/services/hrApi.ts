@@ -26,7 +26,7 @@ export class HrApiError extends Error {
     super(message); this.name = 'HrApiError'
   }
 }
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!configuredBase) throw new HrApiError('API SDM belum dikonfigurasi.')
   if (!tokenProvider) throw new HrApiError('Sesi login diperlukan.', 401)
   const token = await tokenProvider()
@@ -43,7 +43,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body.data
 }
 export const hrApi = {
-  listEmployees: () => request<HrEmployeeRecord[]>('/api/hr/employees?limit=100'),
+  listEmployees: () => apiRequest<HrEmployeeRecord[]>('/api/hr/employees?limit=100'),
   createEmployee: (input: Pick<HrEmployeeRecord, 'employee_number' | 'full_name' | 'department' | 'job_title' | 'employment_type'>) =>
-    request<HrEmployeeRecord>('/api/hr/employees', { method: 'POST', body: JSON.stringify(input) }),
+    apiRequest<HrEmployeeRecord>('/api/hr/employees', { method: 'POST', body: JSON.stringify(input) }),
 }
