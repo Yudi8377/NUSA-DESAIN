@@ -78,6 +78,10 @@ Alur target: pengguna berizin → UI NUSA DESIGN → validasi dan otorisasi back
 - Dokumen ini tidak menyatakan bahwa autentikasi HR, persetujuan server-side, payroll, pajak, BPJS, atau kontrol produksi telah aktif.
 - Setiap tahapan hanya boleh ditandai selesai setelah kode, konfigurasi, pengujian, dan perilaku aktual diverifikasi.
 
-## 7. Batasan
+## 7. Kontrak API dan batasan
+
+Kontrak target endpoint, bentuk respons, kewajiban validasi sesi, konteks tenant, serta kriteria penerimaan keamanan dicatat di [HR-API-CONTRACT.md](HR-API-CONTRACT.md). Dokumen tersebut merupakan rancangan; API belum aktif.
+
+## 8. Batasan
 
 Dokumen ini adalah rencana rekayasa perangkat lunak, bukan nasihat hukum, pajak, atau ketenagakerjaan. Implementasi harus mengikuti ketentuan Indonesia yang berlaku dan kebijakan perusahaan yang telah diverifikasi.
