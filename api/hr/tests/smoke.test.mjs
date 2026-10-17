@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 process.env.ALLOWED_ORIGINS = 'https://yudi8377.github.io,http://localhost:5173';
+process.env.NEON_AUTH_BASE_URL = 'https://auth.test/neondb/auth';
+process.env.NEON_AUTH_JWKS_URL = 'https://auth.test/neondb/auth/.well-known/jwks.json';
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://invalid:invalid@127.0.0.1:5432/unused';
 
 const { default: handler } = await import('../dist/index.mjs');
