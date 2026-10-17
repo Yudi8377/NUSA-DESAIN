@@ -67,7 +67,7 @@ npm run preview
 
 Migrasi awal tersedia di `database/migrations/0001_nusa_design_foundation.sql`, baseline isolasi tenant di `database/migrations/0002_tenant_rls_baseline.sql`, dan metadata AI Studio di `database/migrations/0003_ai_studio_jobs_assets.sql`.
 
-Migrasi `0003` telah diterapkan pada branch development Neon `nusa-design-dev-ready` dan diverifikasi: kedua tabel tersedia serta Row-Level Security aktif. Belum diterapkan ke branch production. Kebijakan ini belum membuktikan keamanan produksi sampai API tepercaya memvalidasi sesi, menetapkan konteks tenant per transaksi, dan melewati pengujian lintas organisasi.
+Migrasi `0003` AI Studio dan `0004` fondasi SDM telah diterapkan pada branch development Neon `nusa-design-dev-ready`. Migrasi `0004` diverifikasi: empat tabel HR tersedia, Row-Level Security aktif, serta kebijakan dan constraint terbentuk. Keduanya belum diterapkan ke branch production. Kebijakan database belum membuktikan keamanan produksi sampai API tepercaya memvalidasi sesi, menetapkan konteks tenant per transaksi, dan melewati pengujian lintas organisasi.
 
 ## Status
 
