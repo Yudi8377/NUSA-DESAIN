@@ -1,1 +1,12 @@
-{"name":"nusa-design-hr-api","private":true,"type":"module","dependencies":{"jose":"^6.1.0","pg":"^8.16.3"}}
+{
+  "name": "nusa-design-hr-api",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "jose": "^6.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
