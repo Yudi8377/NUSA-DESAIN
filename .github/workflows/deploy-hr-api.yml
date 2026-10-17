@@ -85,6 +85,8 @@ jobs:
             URL="$1"
             HEALTH=$(curl --fail-with-body --silent --show-error "$URL/health")
             echo "$HEALTH" | jq -e '.data.status == "ok" and .data.service == "nusa-design-api"'
+            READY=$(curl --fail-with-body --silent --show-error "$URL/ready")
+            echo "$READY" | jq -e '.data.status == "ready" and .data.service == "nusa-design-api"'
             CODE=$(curl --silent --output /tmp/nusa-unauthorized.json --write-out '%{http_code}' "$URL/api/organizations")
             test "$CODE" = "401"
             jq -e '.error.message == "Sesi login diperlukan."' /tmp/nusa-unauthorized.json
