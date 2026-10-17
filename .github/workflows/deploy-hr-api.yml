@@ -25,8 +25,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: api/hr/package.json
       - name: Install API dependencies
         run: npm install --prefix api/hr --no-audit --no-fund
       - name: Bundle for Neon Functions Node.js 24
