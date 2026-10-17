@@ -62,7 +62,7 @@ jobs:
             AUTH_BASE="$4"
             AUTH_JWKS="$5"
             ENV_JSON=$(jq -cn --arg origins "$ORIGINS" --arg auth_base "$AUTH_BASE" --arg auth_jwks "$AUTH_JWKS" --arg branch "$BRANCH_NAME" '{ALLOWED_ORIGINS:$origins,NEON_AUTH_BASE_URL:$auth_base,NEON_AUTH_JWKS_URL:$auth_jwks,NEON_BRANCH:$branch}')
-            curl --fail-with-body --silent --show-error \
+            curl --fail-with-body --silent --show-error --output /dev/null \
               -X POST \
               -H "Authorization: Bearer $NEON_API_KEY" \
               -F "zip=@api/hr/nusa-design-hr-api.zip;type=application/zip" \
