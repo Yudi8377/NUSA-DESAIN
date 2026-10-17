@@ -1,11 +1,14 @@
-import { createAuthClient } from '@neondatabase/auth'
-import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
+import { createAuthClient } from '@neondatabase/neon-js/auth'
+import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// Use Neon's React adapter for the Vite/React client. The adapter preserves
-// Better Auth result shapes and Neon-specific session/JWT handling.
+// GitHub Pages and Neon Auth are different origins. Include the session
+// cookie on cross-origin Auth requests so token() can mint a JWT.
 export const authClient: any = authUrl
-  ? createAuthClient(authUrl, { adapter: BetterAuthReactAdapter() })
+  ? createAuthClient(authUrl, {
+      adapter: BetterAuthReactAdapter(),
+      fetchOptions: { credentials: 'include' },
+    })
   : null
 export const isAuthConfigured = Boolean(authUrl)
