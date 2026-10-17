@@ -57,13 +57,17 @@ jobs:
           fi
           deploy_function() {
             BRANCH_ID="$1"
-            ORIGINS="$2"
+            BRANCH_NAME="$2"
+            ORIGINS="$3"
+            AUTH_BASE="$4"
+            AUTH_JWKS="$5"
+            ENV_JSON=$(jq -cn --arg origins "$ORIGINS" --arg auth_base "$AUTH_BASE" --arg auth_jwks "$AUTH_JWKS" --arg branch "$BRANCH_NAME" '{ALLOWED_ORIGINS:$origins,NEON_AUTH_BASE_URL:$auth_base,NEON_AUTH_JWKS_URL:$auth_jwks,NEON_BRANCH:$branch}')
             curl --fail-with-body --silent --show-error \
               -X POST \
               -H "Authorization: Bearer $NEON_API_KEY" \
               -F "zip=@api/hr/nusa-design-hr-api.zip;type=application/zip" \
               -F "runtime=nodejs24" \
-              -F "environment={\"ALLOWED_ORIGINS\":\"$ORIGINS\"}" \
+              -F "environment=$ENV_JSON" \
               "https://console.neon.tech/api/v2/projects/gentle-tooth-09855567/branches/$BRANCH_ID/functions/hrapi/deployments"
             for attempt in $(seq 1 24); do
               DETAILS=$(curl --fail-with-body --silent --show-error \
@@ -91,10 +95,10 @@ jobs:
             test "$CODE" = "401"
             jq -e '.error.message == "Sesi login diperlukan."' /tmp/nusa-unauthorized.json
           }
-          DEV_URL=$(deploy_function "br-curly-flower-b4zhtzqp" "https://yudi8377.github.io,http://localhost:5173")
+          DEV_URL=$(deploy_function "br-curly-flower-b4zhtzqp" "nusa-design-dev" "https://yudi8377.github.io,http://localhost:5173" "https://ep-broad-frost-b4g699vc.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth" "https://ep-broad-frost-b4g699vc.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth/.well-known/jwks.json")
           echo "Development function deployed: $DEV_URL"
           verify_function "$DEV_URL"
-          PROD_URL=$(deploy_function "br-wispy-feather-b4t2xxmn" "https://yudi8377.github.io")
+          PROD_URL=$(deploy_function "br-wispy-feather-b4t2xxmn" "production" "https://yudi8377.github.io" "https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth" "https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth/.well-known/jwks.json")
           echo "Production function deployed and build completed: $PROD_URL"
           verify_function "$PROD_URL"
           PROD_AUTH_URL="https://ep-rapid-rice-b49xojtk.neonauth.c-6.us-east-2.aws.neon.tech/neondb/auth"
