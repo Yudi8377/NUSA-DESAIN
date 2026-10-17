@@ -15,12 +15,20 @@ test('health endpoint returns a non-sensitive service status', async () => {
   assert.ok(body.meta.requestId);
 });
 
-test('protected endpoints reject requests without a bearer token', async () => {
-  const response = await handler.fetch(new Request('https://local.test/api/organizations'));
-  assert.equal(response.status, 401);
-  const body = await response.json();
-  assert.equal(body.error.message, 'Sesi login diperlukan.');
-  assert.ok(body.error.requestId);
+test('all protected organization, project, task, and HR routes reject missing bearer tokens', async () => {
+  const paths = [
+    '/api/organizations',
+    '/api/hr/employees',
+    '/api/projects',
+    '/api/projects/00000000-0000-4000-8000-000000000001/tasks',
+  ];
+  for (const path of paths) {
+    const response = await handler.fetch(new Request('https://local.test' + path));
+    assert.equal(response.status, 401, path);
+    const body = await response.json();
+    assert.equal(body.error.message, 'Sesi login diperlukan.', path);
+    assert.ok(body.error.requestId, path);
+  }
 });
 
 test('browser CORS only reflects an allowlisted origin', async () => {
