@@ -23,10 +23,23 @@ export default function AuthGate() {
 
   const getToken = useCallback(async () => {
     if (!authClient) return ''
-    const result = await authClient.token()
-    if (result?.error) throw new Error(result.error.message || 'Tidak dapat mengambil token sesi.')
+    let result: any
+    try {
+      result = await authClient.token()
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Kesalahan jaringan atau respons tidak dikenal.'
+      throw new Error(`Neon Auth gagal menerbitkan token: ${detail}`)
+    }
+    if (result?.error) {
+      const code = typeof result.error.code === 'string' ? ` (kode: ${result.error.code})` : ''
+      throw new Error(`Neon Auth menolak penerbitan token${code}: ${result.error.message || 'kesalahan tidak diketahui'}`)
+    }
     const token = result?.data?.token
-    if (typeof token !== 'string' || !token) throw new Error('Sesi tidak memiliki token akses yang valid.')
+    if (typeof token !== 'string' || !token) {
+      const resultKeys = result && typeof result === 'object' ? Object.keys(result).join(', ') || 'kosong' : typeof result
+      const dataKeys = result?.data && typeof result.data === 'object' ? Object.keys(result.data).join(', ') || 'kosong' : 'tidak tersedia'
+      throw new Error(`Neon Auth tidak mengembalikan data.token. Properti respons: ${resultKeys}; properti data: ${dataKeys}. Periksa plugin JWT pada branch production Neon Auth.`)
+    }
     return token
   }, [])
 
