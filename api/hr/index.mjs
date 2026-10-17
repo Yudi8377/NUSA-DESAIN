@@ -150,6 +150,82 @@ export default {
         }, ['owner','admin','hr']);
         return json({ data: row, meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
       }
+
+      if (url.pathname === '/api/projects' && request.method === 'GET') {
+        const orgId = request.headers.get('x-organization-id');
+        const rawLimit = Number(url.searchParams.get('limit') || 100);
+        const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(100, Math.floor(rawLimit))) : 100;
+        const status = url.searchParams.get('status');
+        if (status && !['planning','active','on_hold','completed','cancelled'].includes(status)) throw Object.assign(new Error('Filter status proyek tidak valid.'), { status: 400 });
+        const rows = await withIdentity(identity, orgId, async (client, actor) => {
+          const result = await client.query(`SELECT id, code, name, project_type, status, location, start_date, target_end_date, budget_amount, progress_percent, created_at
+            FROM public.projects WHERE organization_id = $1 AND ($2::text IS NULL OR status = $2)
+            ORDER BY updated_at DESC LIMIT $3`, [actor.orgId, status || null, limit]);
+          return result.rows;
+        }, ['owner','admin','project_manager','architect','engineer','finance','procurement','hr','viewer']);
+        return json({ data: rows, meta: { requestId } }, 200, { ...headers, 'X-Request-Id': requestId });
+      }
+      if (url.pathname === '/api/projects' && request.method === 'POST') {
+        const orgId = request.headers.get('x-organization-id');
+        const body = await readJson(request);
+        const code = safeText(body.code, 40, 'Kode proyek');
+        const name = safeText(body.name, 180, 'Nama proyek');
+        const projectType = body.project_type || 'construction';
+        if (!['architecture','construction','renovation','interior','infrastructure','other'].includes(projectType)) throw Object.assign(new Error('Jenis proyek tidak valid.'), { status: 400 });
+        const location = body.location == null || body.location === '' ? null : safeText(body.location, 180, 'Lokasi');
+        const budget = body.budget_amount == null ? 0 : Number(body.budget_amount);
+        if (!Number.isFinite(budget) || budget < 0 || budget > 1000000000000000) throw Object.assign(new Error('Nilai anggaran proyek tidak valid.'), { status: 400 });
+        const startDate = body.start_date || null;
+        const targetDate = body.target_end_date || null;
+        for (const [dateValue, label] of [[startDate,'Tanggal mulai'],[targetDate,'Target selesai']]) {
+          if (dateValue !== null && (typeof dateValue !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateValue))) throw Object.assign(new Error(`${label} harus berformat YYYY-MM-DD.`), { status: 400 });
+        }
+        const row = await withIdentity(identity, orgId, async (client, actor) => {
+          const result = await client.query(`INSERT INTO public.projects (organization_id, code, name, project_type, status, location, start_date, target_end_date, budget_amount, created_by)
+            VALUES ($1,$2,$3,$4,'planning',$5,$6,$7,$8,$9)
+            RETURNING id, code, name, project_type, status, location, start_date, target_end_date, budget_amount, progress_percent, created_at`,
+            [actor.orgId, code, name, projectType, location, startDate, targetDate, budget, actor.userId]);
+          const project = result.rows[0];
+          await client.query('INSERT INTO public.audit_events (organization_id, actor_user_id, action, entity_type, entity_id, details) VALUES ($1,$2,$3,$4,$5,$6::jsonb)', [actor.orgId, actor.userId, 'project.created', 'project', project.id, JSON.stringify({ code, project_type: projectType })]);
+          return project;
+        }, ['owner','admin','project_manager','architect']);
+        return json({ data: row, meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
+      }
+      const taskPath = url.pathname.match(/^\\/api\\/projects\\/([0-9a-f-]{36})\\/tasks$/i);
+      if (taskPath && request.method === 'GET') {
+        const orgId = request.headers.get('x-organization-id');
+        const projectId = taskPath[1];
+        const rows = await withIdentity(identity, orgId, async (client, actor) => {
+          const project = await client.query('SELECT id FROM public.projects WHERE id=$1 AND organization_id=$2', [projectId, actor.orgId]);
+          if (!project.rowCount) throw Object.assign(new Error('Proyek tidak ditemukan pada workspace ini.'), { status: 404 });
+          const result = await client.query(`SELECT id, project_id, title, description, status, priority, due_date, assignee_id, created_at
+            FROM public.project_tasks WHERE organization_id=$1 AND project_id=$2 ORDER BY due_date NULLS LAST, created_at DESC LIMIT 200`, [actor.orgId, projectId]);
+          return result.rows;
+        }, ['owner','admin','project_manager','architect','engineer','finance','procurement','hr','viewer']);
+        return json({ data: rows, meta: { requestId } }, 200, { ...headers, 'X-Request-Id': requestId });
+      }
+      if (taskPath && request.method === 'POST') {
+        const orgId = request.headers.get('x-organization-id');
+        const projectId = taskPath[1];
+        const body = await readJson(request);
+        const title = safeText(body.title, 180, 'Judul tugas');
+        const description = body.description == null || body.description === '' ? null : safeText(body.description, 4000, 'Deskripsi');
+        const priority = body.priority || 'normal';
+        if (!['low','normal','high','urgent'].includes(priority)) throw Object.assign(new Error('Prioritas tugas tidak valid.'), { status: 400 });
+        const dueDate = body.due_date || null;
+        if (dueDate !== null && (typeof dueDate !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dueDate))) throw Object.assign(new Error('Tenggat harus berformat YYYY-MM-DD.'), { status: 400 });
+        const row = await withIdentity(identity, orgId, async (client, actor) => {
+          const result = await client.query(`INSERT INTO public.project_tasks (organization_id, project_id, title, description, priority, due_date)
+            SELECT $1, p.id, $3, $4, $5, $6 FROM public.projects p WHERE p.id=$2 AND p.organization_id=$1
+            RETURNING id, project_id, title, description, status, priority, due_date, assignee_id, created_at`,
+            [actor.orgId, projectId, title, description, priority, dueDate]);
+          if (!result.rowCount) throw Object.assign(new Error('Proyek tidak ditemukan pada workspace ini.'), { status: 404 });
+          const task = result.rows[0];
+          await client.query('INSERT INTO public.audit_events (organization_id, actor_user_id, action, entity_type, entity_id, details) VALUES ($1,$2,$3,$4,$5,$6::jsonb)', [actor.orgId, actor.userId, 'project_task.created', 'project_task', task.id, JSON.stringify({ project_id: projectId, priority })]);
+          return task;
+        }, ['owner','admin','project_manager','architect','engineer']);
+        return json({ data: row, meta: { requestId } }, 201, { ...headers, 'X-Request-Id': requestId });
+      }
       return fail('Endpoint tidak ditemukan.', 404, requestId, headers);
     } catch (error) {
       const status = Number.isInteger(error?.status) ? error.status : (error?.code === '23505' ? 409 : 500);
