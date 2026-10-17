@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, Download, Image, Film, RefreshCw, Sparkles } from 'lucide-react'
 
-const API_BASE = (((import.meta as unknown as { env?: { VITE_AI_API_URL?: string } }).env?.VITE_AI_API_URL) ?? '').replace(/\/$/, '')
+const API_BASE = ((((import.meta as unknown as { env?: { VITE_AI_API_URL?: string } }).env?.VITE_AI_API_URL) ?? 'https://nusa-design-ai-api.dwahyudi8377.workers.dev')).replace(/\/$/, '')
 type Props = { mode: string; prompt: string; projectName: string }
 type Health = { imageConfigured?: boolean; videoConfigured?: boolean; accessConfigured?: boolean }
 type Generation = { error?: string; imageData?: string; imageUrl?: string; requestId?: string; status?: string; videoUrl?: string; revisedPrompt?: string }
@@ -37,6 +37,8 @@ export default function AIGenerationConnector({ mode, prompt, projectName }: Pro
     setError(''); setImage(''); setVideo(''); setNote('')
     if (!API_BASE) { setError('Backend generasi belum dipasang. Administrator perlu mengatur VITE_AI_API_URL dan men-deploy AI Worker.'); return }
     if (!accessCode.trim()) { setError('Masukkan kode akses Studio AI dari administrator.'); return }
+    const accepted = window.confirm(mode === 'video' ? 'Pembuatan video menggunakan layanan eksternal berbayar dan dapat dikenakan biaya. Lanjutkan?' : 'Pembuatan gambar menggunakan layanan eksternal berbayar dan dapat dikenakan biaya. Lanjutkan?')
+    if (!accepted) return
     setBusy(true)
     try {
       const response = await fetch(API_BASE + '/api/generate', {
