@@ -31,7 +31,7 @@ jobs:
       - name: Bundle for Neon Functions Node.js 24
         run: |
           mkdir -p api/hr/dist
-          api/hr/node_modules/.bin/esbuild api/hr/index.mjs --bundle --platform=node --target=node24 --format=esm --outfile=api/hr/dist/index.mjs --external:pg-native
+          api/hr/node_modules/.bin/esbuild api/hr/index.mjs --bundle --platform=node --target=node24 --format=esm --banner:js='import { createRequire } from "node:module"; const require = createRequire(import.meta.url);' --outfile=api/hr/dist/index.mjs --external:pg-native
           node --check api/hr/dist/index.mjs
       - name: Run API smoke tests
         run: npm --prefix api/hr test
