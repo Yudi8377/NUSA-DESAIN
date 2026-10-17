@@ -73,6 +73,8 @@ Migrasi `0003` AI Studio dan `0004` fondasi SDM telah diterapkan pada branch dev
 
 Fondasi UI, viewer 3D, dan metadata AI Studio merupakan tahap awal, bukan klaim bahwa seluruh modul ERP telah selesai. Sebelum go-live, konfigurasikan autentikasi, API backend, kebijakan akses berbasis peran, secret deployment, penyimpanan aset privat, backup, monitoring, dan uji penerimaan.
 
+Neon Auth (Managed Better Auth) telah diaktifkan hanya pada branch development `nusa-design-dev-ready` sebagai persiapan. UI login, pemetaan identitas ke `user_profiles`, API backend, dan keanggotaan organisasi belum terhubung; ini belum berarti autentikasi aplikasi siap. Database production tidak diubah.
+
 
 ## K3 & Keselamatan (OpenStatus-inspired)
 
