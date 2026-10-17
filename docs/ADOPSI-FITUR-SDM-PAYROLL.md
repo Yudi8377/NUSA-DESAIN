@@ -54,8 +54,8 @@ Alur target: pengguna berizin → UI NUSA DESIGN → validasi dan otorisasi back
 - Tidak mengklaim data tersimpan di server.
 
 ### Tahap 2 — Data dan akses
-- Verifikasi backend/database yang tersedia dan buat migrasi skema HR.
-- Persistensi data karyawan, tim, cuti, absensi dan kompetensi.
+- Fondasi skema native tersedia pada `database/migrations/0004_hr_management.sql` dan telah diterapkan serta diverifikasi pada branch development Neon `nusa-design-dev-ready`.
+- Empat tabel HR memiliki Row-Level Security dan kebijakan peran/self-service dasar. Persistensi UI, API tepercaya, validasi lintas organisasi, serta pengujian negatif masih perlu dibangun sebelum data nyata digunakan.
 - Autentikasi, role, izin minimum, audit trail dan pengujian akses.
 - Uji backup/restore serta validasi lintas role.
 
@@ -72,8 +72,9 @@ Alur target: pengguna berizin → UI NUSA DESIGN → validasi dan otorisasi back
 
 ## 6. Status implementasi
 
-- Halaman native **SDM & Payroll** telah tersedia di `src/HRManagement.tsx`, dengan styling pada `src/style.css` dan navigasi di `src/App.tsx`.
-- Tampilan awal berisi data ilustratif dan belum dapat dianggap sebagai catatan HR yang persisten.
+- Halaman native **SDM & Payroll** tersedia di `src/HRManagement.tsx`, dengan styling pada `src/style.css` dan navigasi di `src/App.tsx`. Direktori memiliki pencarian/filter dan formulir demo; antrean HR dapat disimulasikan secara lokal.
+- Migrasi `0004` telah berhasil diterapkan pada branch development `nusa-design-dev-ready`. Verifikasi read-only memastikan empat tabel HR tersedia, RLS aktif, serta kebijakan dan constraint terbentuk.
+- Perubahan skema belum diterapkan ke branch production. UI belum terhubung ke API dan data yang tampil/ditambahkan masih bukan catatan HR persisten.
 - Dokumen ini tidak menyatakan bahwa autentikasi HR, persetujuan server-side, payroll, pajak, BPJS, atau kontrol produksi telah aktif.
 - Setiap tahapan hanya boleh ditandai selesai setelah kode, konfigurasi, pengujian, dan perilaku aktual diverifikasi.
 
