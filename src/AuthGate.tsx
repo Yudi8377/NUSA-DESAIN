@@ -51,6 +51,7 @@ export default function AuthGate() {
     setOrganizations(rows)
     if (!rows.length) { setPhase('workspace'); return }
     setOrganizationId(rows[0].id)
+    configureHrApi(getToken, rows[0].id)
     setPhase('ready')
   }, [apiRequest, getToken])
 
@@ -105,7 +106,7 @@ export default function AuthGate() {
     try {
       const token = await getToken()
       const created = await apiRequest('/api/organizations', token, { method: 'POST', body: JSON.stringify({ name: workspaceName.trim() }) }) as Organization
-      setOrganizations([created]); setOrganizationId(created.id); setPhase('ready')
+      setOrganizations([created]); setOrganizationId(created.id); configureHrApi(getToken, created.id); setPhase('ready')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Workspace gagal dibuat.')
     } finally { setBusy(false) }
@@ -118,9 +119,9 @@ export default function AuthGate() {
     }
   }
 
-  if (phase === 'demo') return <><div className="demo-mode-banner"><b>MODE DEMO</b><span>Autentikasi dan API belum dikonfigurasi. Data pada dashboard masih ilustrasi, bukan data perusahaan.</span></div><App /></>
+  if (phase === 'demo') return <><div className="demo-mode-banner"><b>MODE DEMO</b><span>Autentikasi dan API belum dikonfigurasi. Data pada dashboard masih ilustrasi, bukan data perusahaan.</span></div><App key={organizationId} /></>
   if (phase === 'loading') return <main className="auth-screen"><div className="auth-card"><div className="auth-brand-mark">ND</div><h1>Menyiapkan ruang kerja</h1><p>Memeriksa sesi dan konfigurasi keamanan NUSA DESIGN…</p></div></main>
-  if (phase === 'ready') return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><label>Ganti workspace <select value={organizationId} onChange={e => setOrganizationId(e.target.value)}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></>
+  if (phase === 'ready') return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><label>Ganti workspace <select value={organizationId} onChange={e => { setOrganizationId(e.target.value); configureHrApi(getToken, e.target.value) }}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></>
   if (phase === 'workspace') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">LANGKAH AWAL</div><h1>Buat workspace perusahaan</h1><p>Workspace memisahkan data proyek dan SDM berdasarkan organisasi. Anda akan menjadi pemilik workspace ini.</p><form onSubmit={createWorkspace}><label>Nama perusahaan atau studio<input required maxLength={120} value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder="Contoh: Nusa Design Studio" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Membuat workspace…' : 'Buat workspace'}</button></form><button className="auth-link" onClick={() => void signOut()}>Keluar dari akun</button></section></main>
   if (phase === 'error') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">KONFIGURASI DIPERLUKAN</div><h1>Workspace belum dapat dibuka</h1><p>{message || 'Layanan belum siap.'}</p><button className="auth-secondary" onClick={() => window.location.reload()}>Coba lagi</button></section></main>
   return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · PROJECT INTELLIGENCE</div><h1>{isSignUp ? 'Buat akun Anda' : 'Selamat datang kembali'}</h1><p>Masuk ke ruang kerja arsitektur, konstruksi, anggaran, dokumen, dan tim proyek Anda.</p><form onSubmit={submitAuth}>{isSignUp && <label>Nama lengkap<input required autoComplete="name" maxLength={160} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nama Anda" /></label>}<label>Email<input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@perusahaan.com" /></label><label>Kata sandi<input required type="password" minLength={8} autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimal 8 karakter" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Memproses…' : isSignUp ? 'Daftar akun' : 'Masuk ke workspace'}</button></form><div className="auth-switch">{isSignUp ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'} <button className="auth-link" onClick={() => { setIsSignUp(!isSignUp); setMessage('') }}>{isSignUp ? 'Masuk' : 'Buat akun'}</button></div><small className="auth-privacy">Akses data memerlukan token sesi valid dan keanggotaan organisasi aktif.</small></section></main>
