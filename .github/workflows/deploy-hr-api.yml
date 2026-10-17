@@ -52,8 +52,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$NEON_API_KEY" ]; then
-            echo "NEON_API_KEY is not configured; bundle and smoke tests passed, deployment skipped."
-            exit 0
+            echo "::error::NEON_API_KEY is not configured. Bundle and smoke tests passed, but commercial deployment is blocked until this repository secret is added."
+            exit 1
           fi
           deploy_function() {
             BRANCH_ID="$1"
