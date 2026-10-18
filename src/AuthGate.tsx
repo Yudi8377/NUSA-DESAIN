@@ -22,34 +22,18 @@ export default function AuthGate() {
   const [isSignUp, setIsSignUp] = useState(false)
 
   const getToken = useCallback(async () => {
-    if (!authClient) return ''
-    let result: any
+    if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
     try {
-      result = await authClient.token()
+      // Use Neon SDK's official JWT helper as the single source of truth.
+      // A valid session without a JWT must not be treated as authenticated API access.
+      const token = await authClient.getJWTToken?.()
+      if (typeof token === 'string' && token.trim()) return token
+      throw new Error('Sesi login aktif, tetapi Neon Auth belum memberikan JWT. Keluar lalu masuk kembali agar sesi diperbarui.')
     } catch (error) {
+      if (error instanceof Error && error.message.includes('belum memberikan JWT')) throw error
       const detail = error instanceof Error ? error.message : 'Kesalahan jaringan atau respons tidak dikenal.'
-      throw new Error(`Neon Auth gagal menerbitkan JWT: ${detail}`)
+      throw new Error(`Gagal mengambil JWT dari Neon Auth: ${detail}`)
     }
-    if (result?.error) {
-      const code = typeof result.error.code === 'string' ? ` (kode: ${result.error.code})` : ''
-      throw new Error(`Neon Auth menolak penerbitan JWT${code}: ${result.error.message || 'kesalahan tidak diketahui'}`)
-    }
-    // SDK versions expose JWT through different helpers. Prefer the documented
-    // token() response, then fall back to getJWTToken() when available.
-    const token = result?.data?.token
-    if (typeof token === 'string' && token) return token
-
-    try {
-      const legacyToken = await authClient.getJWTToken?.()
-      if (typeof legacyToken === 'string' && legacyToken) return legacyToken
-      if (typeof legacyToken?.data?.token === 'string' && legacyToken.data.token) return legacyToken.data.token
-    } catch {
-      // Keep the primary token response diagnostics below.
-    }
-
-    const resultKeys = result && typeof result === 'object' ? Object.keys(result).join(', ') : typeof result
-    const dataKeys = result?.data && typeof result.data === 'object' ? Object.keys(result.data).join(', ') : 'tidak ada'
-    throw new Error(`JWT tidak tersedia. Respons token: [${resultKeys || 'kosong'}]; data: [${dataKeys}]. Pastikan plugin JWT aktif pada branch Neon Auth production.`)
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
@@ -145,6 +129,6 @@ export default function AuthGate() {
   if (phase === 'loading') return <main className="auth-screen"><div className="auth-card"><div className="auth-brand-mark">ND</div><h1>Menyiapkan ruang kerja</h1><p>Memeriksa sesi dan konfigurasi keamanan NUSA DESIGN…</p></div></main>
   if (phase === 'ready') return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><label>Ganti workspace <select value={organizationId} onChange={e => { setOrganizationId(e.target.value); configureHrApi(getToken, e.target.value) }}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></>
   if (phase === 'workspace') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">LANGKAH AWAL</div><h1>Buat workspace perusahaan</h1><p>Workspace memisahkan data proyek dan SDM berdasarkan organisasi. Anda akan menjadi pemilik workspace ini.</p><form onSubmit={createWorkspace}><label>Nama perusahaan atau studio<input required maxLength={120} value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder="Contoh: Nusa Design Studio" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Membuat workspace…' : 'Buat workspace'}</button></form><button className="auth-link" onClick={() => void signOut()}>Keluar dari akun</button></section></main>
-  if (phase === 'error') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">KONFIGURASI DIPERLUKAN</div><h1>Workspace belum dapat dibuka</h1><p>{message || 'Layanan belum siap.'}</p><button className="auth-secondary" onClick={() => window.location.reload()}>Coba lagi</button></section></main>
+  if (phase === 'error') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">SESI PERLU DIPERBARUI</div><h1>Workspace belum dapat dibuka</h1><p>{message || 'Layanan belum siap.'}</p><button className="auth-primary" onClick={() => void signOut()} disabled={busy}>{busy ? 'Memperbarui sesi…' : 'Keluar dan masuk kembali'}</button><button className="auth-secondary" onClick={() => window.location.reload()} disabled={busy}>Coba lagi</button></section></main>
   return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · PROJECT INTELLIGENCE</div><h1>{isSignUp ? 'Buat akun Anda' : 'Selamat datang kembali'}</h1><p>Masuk ke ruang kerja arsitektur, konstruksi, anggaran, dokumen, dan tim proyek Anda.</p><form onSubmit={submitAuth}>{isSignUp && <label>Nama lengkap<input required autoComplete="name" maxLength={160} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nama Anda" /></label>}<label>Email<input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@perusahaan.com" /></label><label>Kata sandi<input required type="password" minLength={8} autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimal 8 karakter" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Memproses…' : isSignUp ? 'Daftar akun' : 'Masuk ke workspace'}</button></form><div className="auth-switch">{isSignUp ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'} <button className="auth-link" onClick={() => { setIsSignUp(!isSignUp); setMessage('') }}>{isSignUp ? 'Masuk' : 'Buat akun'}</button></div><small className="auth-privacy">Akses data memerlukan token sesi valid dan keanggotaan organisasi aktif.</small></section></main>
 }
