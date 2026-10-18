@@ -3,14 +3,12 @@ import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// Use the supported public Neon Auth client factory. The internal factory
-// can route a Promise into the native fetch method slot in browser builds,
-// producing: "[object Promise] is not a valid HTTP method".
+// Use the documented adapter factory with no custom arguments. Passing fetchOptions
+// into the adapter factory is not supported by @neondatabase/auth 0.6.0-beta and
+// can corrupt the underlying fetch configuration in the browser.
 export const authClient: any = authUrl
   ? createAuthClient(authUrl, {
-      adapter: BetterAuthReactAdapter({
-        fetchOptions: { credentials: 'include' },
-      }),
+      adapter: BetterAuthReactAdapter(),
     })
   : null
 
