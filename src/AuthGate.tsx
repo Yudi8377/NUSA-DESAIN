@@ -28,9 +28,11 @@ export default function AuthGate() {
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
     try {
-      // Use Neon SDK's official JWT helper as the single source of truth.
-      // A valid session without a JWT must not be treated as authenticated API access.
-      const token = await authClient.getJWTToken?.()
+      // Neon Auth's documented JWT method returns { data: { token }, error }.
+      // getJWTToken() is not part of the public client and can corrupt fetch arguments.
+      const result = await authClient.token()
+      if (result?.error) throw new Error(result.error.message || 'Neon Auth gagal menerbitkan JWT.')
+      const token = result?.data?.token
       if (typeof token === 'string' && token.trim()) return token
       throw new Error('Sesi login aktif, tetapi Neon Auth belum memberikan JWT. Keluar lalu masuk kembali agar sesi diperbarui.')
     } catch (error) {
