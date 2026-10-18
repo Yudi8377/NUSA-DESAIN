@@ -1,12 +1,14 @@
 import { createAuthClient } from '@neondatabase/auth'
+import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// The app uses imperative Better Auth methods and does not use React auth hooks.
-// Keep the Managed Neon Auth client on its default adapter and use authClient.token()
-// for JWT retrieval, as documented by Neon.
+// Neon’s React adapter injects the JWT returned by Managed Auth into the
+// session and exposes getJWTToken(). Keep this adapter for the browser app.
 export const authClient: any = authUrl
-  ? createAuthClient(authUrl)
+  ? createAuthClient(authUrl, {
+      adapter: BetterAuthReactAdapter(),
+    })
   : null
 
 export const isAuthConfigured = Boolean(authUrl)
