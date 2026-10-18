@@ -27,33 +27,18 @@ export default function AuthGate() {
 
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
-    let adapterError = ''
-    try {
-      // The Neon React adapter exposes getJWTToken() and injects the JWT
-      // into the session response. Pass false explicitly: anonymous access
-      // is not enabled for this private company workspace.
-      if (typeof authClient.getJWTToken === 'function') {
-        const token = await authClient.getJWTToken(false)
-        if (typeof token === 'string' && token.split('.').length === 3) return token
-      }
-    } catch (error) {
-      adapterError = error instanceof Error ? error.message : 'Pengambilan token melalui adapter gagal.'
-    }
 
-    try {
-      // Fallback to the documented Managed Auth token endpoint.
-      if (typeof authClient.token === 'function') {
-        const result = await authClient.token()
-        if (result?.error) throw new Error(result.error.message || 'Endpoint token Neon Auth mengembalikan error.')
-        const token = result?.data?.token
-        if (typeof token === 'string' && token.split('.').length === 3) return token
-      }
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'Endpoint token gagal.'
-      throw new Error(`Neon Auth tidak dapat menerbitkan JWT. Adapter: ${adapterError || 'tidak menghasilkan token'}. Endpoint token: ${detail}`)
-    }
+    // Neon Auth 0.6.0-beta in this project calls /get-jwt-token when using
+    // getJWTToken(). The configured Managed Auth endpoint returns 404 there.
+    // The supported React adapter attaches the Neon JWT to session.token
+    // from the set-auth-jwt response header, so read it from getSession().
+    const result = await authClient.getSession()
+    if (result?.error) throw new Error(result.error.message || 'Gagal membaca sesi Neon Auth.')
 
-    throw new Error(`Sesi login terdeteksi, tetapi JWT kosong. Adapter: ${adapterError || 'tidak menghasilkan token'}. Endpoint token tidak mengembalikan data.token. Perlu pemeriksaan respons Neon Auth.`)
+    const token = result?.data?.session?.token
+    if (typeof token === 'string' && token.split('.').length === 3) return token
+
+    throw new Error('Sesi Neon Auth ditemukan, tetapi respons getSession tidak berisi JWT pada session.token. Perlu pemeriksaan respons sesi dari Neon Auth.')
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
