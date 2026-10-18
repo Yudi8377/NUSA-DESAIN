@@ -27,19 +27,33 @@ export default function AuthGate() {
 
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
+    let adapterError = ''
     try {
-      // Neon Auth's documented JWT method returns { data: { token }, error }.
-      // getJWTToken() is not part of the public client and can corrupt fetch arguments.
-      const result = await authClient.token()
-      if (result?.error) throw new Error(result.error.message || 'Neon Auth gagal menerbitkan JWT.')
-      const token = result?.data?.token
-      if (typeof token === 'string' && token.trim()) return token
-      throw new Error('Sesi login aktif, tetapi Neon Auth belum memberikan JWT. Keluar lalu masuk kembali agar sesi diperbarui.')
+      // The Neon React adapter exposes getJWTToken() and injects the JWT
+      // into the session response. Pass false explicitly: anonymous access
+      // is not enabled for this private company workspace.
+      if (typeof authClient.getJWTToken === 'function') {
+        const token = await authClient.getJWTToken(false)
+        if (typeof token === 'string' && token.split('.').length === 3) return token
+      }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('belum memberikan JWT')) throw error
-      const detail = error instanceof Error ? error.message : 'Kesalahan jaringan atau respons tidak dikenal.'
-      throw new Error(`Gagal mengambil JWT dari Neon Auth: ${detail}`)
+      adapterError = error instanceof Error ? error.message : 'Pengambilan token melalui adapter gagal.'
     }
+
+    try {
+      // Fallback to the documented Managed Auth token endpoint.
+      if (typeof authClient.token === 'function') {
+        const result = await authClient.token()
+        if (result?.error) throw new Error(result.error.message || 'Endpoint token Neon Auth mengembalikan error.')
+        const token = result?.data?.token
+        if (typeof token === 'string' && token.split('.').length === 3) return token
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Endpoint token gagal.'
+      throw new Error(`Neon Auth tidak dapat menerbitkan JWT. Adapter: ${adapterError || 'tidak menghasilkan token'}. Endpoint token: ${detail}`)
+    }
+
+    throw new Error(`Sesi login terdeteksi, tetapi JWT kosong. Adapter: ${adapterError || 'tidak menghasilkan token'}. Endpoint token tidak mengembalikan data.token. Perlu pemeriksaan respons Neon Auth.`)
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
