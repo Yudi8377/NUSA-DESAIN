@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import App from './App'
 import { authClient, isAuthConfigured } from './auth-client'
 import { configureHrApi } from './services/hrApi'
@@ -20,6 +21,9 @@ export default function AuthGate() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [isResetPassword, setIsResetPassword] = useState(() => new URLSearchParams(window.location.search).has('token'))
+  const [showPassword, setShowPassword] = useState(false)
 
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
@@ -91,6 +95,25 @@ export default function AuthGate() {
     event.preventDefault()
     setBusy(true); setMessage('')
     try {
+      if (!authClient) throw new Error('Layanan autentikasi belum dikonfigurasi.')
+      if (isForgotPassword) {
+        const redirectTo = new URL(window.location.pathname, window.location.origin)
+        redirectTo.search = ''
+        const result = await authClient.requestPasswordReset({ email: email.trim(), redirectTo: redirectTo.toString() })
+        if (result?.error) throw new Error(result.error.message || 'Permintaan reset kata sandi gagal.')
+        setMessage('Jika email terdaftar, tautan reset kata sandi akan dikirim. Periksa kotak masuk dan folder spam.')
+        return
+      }
+      if (isResetPassword) {
+        const token = new URLSearchParams(window.location.search).get('token')
+        if (!token) throw new Error('Token reset tidak ditemukan. Minta tautan reset baru.')
+        const result = await authClient.resetPassword({ newPassword: password, token })
+        if (result?.error) throw new Error(result.error.message || 'Reset kata sandi gagal.')
+        window.history.replaceState({}, '', window.location.pathname)
+        setIsResetPassword(false); setIsForgotPassword(false); setIsSignUp(false); setPassword('')
+        setMessage('Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru.')
+        return
+      }
       const result = isSignUp
         ? await authClient.signUp.email({ email: email.trim(), password, name: fullName.trim() })
         : await authClient.signIn.email({ email: email.trim(), password })
@@ -140,7 +163,7 @@ export default function AuthGate() {
       {message && <div className="auth-message" role="status">{message}</div>}
       <button className="auth-primary" disabled={busy}>{busy ? 'Memproses…' : isForgotPassword ? 'Kirim tautan reset' : isResetPassword ? 'Simpan kata sandi baru' : isSignUp ? 'Daftar akun' : 'Masuk ke workspace'}</button>
     </form>
-    {!isForgotPassword && !isResetPassword && !isSignUp && <div className="auth-forgot"><button className="auth-link" onClick={() => { setIsForgotPassword(true); setMessage(''); setPassword('') }}>Lupa akun / kata sandi?</button></div>}
-    <div className="auth-switch">{isForgotPassword || isResetPassword ? 'Ingat akun Anda?' : isSignUp ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'} <button className="auth-link" onClick={() => { if (isResetPassword) window.history.replaceState({}, '', window.location.pathname); setIsForgotPassword(false); setIsResetPassword(false); setIsSignUp(false); setMessage(''); setPassword('') }}>{isForgotPassword || isResetPassword ? 'Kembali ke masuk' : isSignUp ? 'Masuk' : 'Buat akun'}</button></div>
+    {!isForgotPassword && !isResetPassword && !isSignUp && <div className="auth-forgot"><button type="button" className="auth-link" onClick={() => { setIsForgotPassword(true); setMessage(''); setPassword('') }}>Lupa akun / kata sandi?</button></div>}
+    <div className="auth-switch">{isForgotPassword || isResetPassword ? 'Ingat akun Anda?' : isSignUp ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'} <button type="button" className="auth-link" onClick={() => { if (isResetPassword) window.history.replaceState({}, '', window.location.pathname); setIsForgotPassword(false); setIsResetPassword(false); setIsSignUp(false); setMessage(''); setPassword('') }}>{isForgotPassword || isResetPassword ? 'Kembali ke masuk' : isSignUp ? 'Masuk' : 'Buat akun'}</button></div>
     <small className="auth-privacy">Akses data memerlukan token sesi valid dan keanggotaan organisasi aktif.</small></section></main>
 }
