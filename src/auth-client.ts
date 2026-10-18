@@ -1,19 +1,17 @@
-import { createInternalNeonAuth } from '@neondatabase/auth'
+import { createAuthClient } from '@neondatabase/auth'
 import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// Keep the Neon wrapper and the Better Auth React adapter together so the
-// workspace gate can request the JWT issued by Neon Auth.
-const neonAuth = authUrl
-  ? createInternalNeonAuth(authUrl, {
+// Use the supported public Neon Auth client factory. The internal factory
+// can route a Promise into the native fetch method slot in browser builds,
+// producing: "[object Promise] is not a valid HTTP method".
+export const authClient: any = authUrl
+  ? createAuthClient(authUrl, {
       adapter: BetterAuthReactAdapter({
         fetchOptions: { credentials: 'include' },
       }),
     })
   : null
 
-export const authClient: any = neonAuth
-  ? Object.assign(neonAuth.adapter, { getJWTToken: neonAuth.getJWTToken })
-  : null
 export const isAuthConfigured = Boolean(authUrl)
