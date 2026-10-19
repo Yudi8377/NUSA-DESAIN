@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 });
@@ -16,7 +16,7 @@ function json(data, status = 200, headers = {}) {
 }
 function cors(request) {
   const origin = request.headers.get('origin');
-  const headers = { Vary: 'Origin', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Authorization,Content-Type,X-Organization-Id', 'Access-Control-Max-Age': '600' };
+  const headers = { Vary: 'Origin', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Authorization,Content-Type,X-Organization-Id,X-AI-Studio-Code', 'Access-Control-Max-Age': '600' };
   if (origin && allowedOrigins.has(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Expose-Headers'] = 'X-Request-Id';
@@ -121,6 +121,80 @@ export default {
         } catch (error) { await client.query('ROLLBACK').catch(() => {}); throw error; }
         finally { client.release(); }
       }
+      if (request.method === 'GET' && url.pathname === '/api/health') {
+        return json({
+          imageConfigured: Boolean(process.env.OPENAI_API_KEY),
+          videoConfigured: Boolean(process.env.FAL_KEY),
+          accessConfigured: Boolean(process.env.AI_STUDIO_ACCESS_CODE),
+        }, 200, { ...headers, 'X-Request-Id': requestId });
+      }
+      if (url.pathname === '/api/generate' && request.method === 'POST') {
+        const expectedCode = process.env.AI_STUDIO_ACCESS_CODE || '';
+        const suppliedCode = request.headers.get('x-ai-studio-code') || '';
+        const expectedBytes = Buffer.from(expectedCode);
+        const suppliedBytes = Buffer.from(suppliedCode);
+        if (!expectedBytes.length || !suppliedBytes.length || expectedBytes.length !== suppliedBytes.length || !timingSafeEqual(expectedBytes, suppliedBytes)) {
+          throw Object.assign(new Error('Kode akses Studio AI tidak valid atau belum dikonfigurasi.'), { status: 401 });
+        }
+        const body = await readJson(request);
+        const mode = body.mode;
+        if (!['concept','exterior','interior','video','presentation'].includes(mode)) throw Object.assign(new Error('Jenis keluaran Studio AI tidak valid.'), { status: 400 });
+        const prompt = safeText(body.prompt, 12000, 'Brief desain');
+        if (mode === 'video') {
+          if (!process.env.FAL_KEY) throw Object.assign(new Error('Provider video belum dikonfigurasi oleh administrator.'), { status: 503 });
+          const provider = await fetch('https://queue.fal.run/fal-ai/kling-video/v2.1/standard/text-to-video', {
+            method: 'POST',
+            headers: { Authorization: 'Key ' + process.env.FAL_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+          const data = await provider.json().catch(() => ({}));
+          if (!provider.ok || typeof data.request_id !== 'string') {
+            console.error('ai_video_submit_failed', requestId, provider.status);
+            throw Object.assign(new Error('Penyedia video gagal menerima pekerjaan. Coba kembali nanti.'), { status: 502 });
+          }
+          return json({ requestId: data.request_id, status: 'IN_QUEUE' }, 202, { ...headers, 'X-Request-Id': requestId });
+        }
+        if (!process.env.OPENAI_API_KEY) throw Object.assign(new Error('Provider gambar belum dikonfigurasi oleh administrator.'), { status: 503 });
+        const provider = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
+        });
+        const data = await provider.json().catch(() => ({}));
+        if (!provider.ok) {
+          console.error('ai_image_provider_failed', requestId, provider.status);
+          throw Object.assign(new Error('Penyedia gambar AI gagal memproses brief. Periksa konfigurasi provider atau coba lagi.'), { status: 502 });
+        }
+        const item = data?.data?.[0];
+        if (typeof item?.b64_json === 'string') return json({ imageData: 'data:image/png;base64,' + item.b64_json, revisedPrompt: item.revised_prompt || null }, 200, { ...headers, 'X-Request-Id': requestId });
+        if (typeof item?.url === 'string') return json({ imageUrl: item.url, revisedPrompt: item.revised_prompt || null }, 200, { ...headers, 'X-Request-Id': requestId });
+        throw Object.assign(new Error('Penyedia tidak mengembalikan gambar yang dapat ditampilkan.'), { status: 502 });
+      }
+      if (request.method === 'GET' && url.pathname === '/api/generate/status') {
+        const expectedCode = process.env.AI_STUDIO_ACCESS_CODE || '';
+        const suppliedCode = request.headers.get('x-ai-studio-code') || '';
+        const expectedBytes = Buffer.from(expectedCode);
+        const suppliedBytes = Buffer.from(suppliedCode);
+        if (!expectedBytes.length || !suppliedBytes.length || expectedBytes.length !== suppliedBytes.length || !timingSafeEqual(expectedBytes, suppliedBytes)) {
+          throw Object.assign(new Error('Kode akses Studio AI tidak valid atau belum dikonfigurasi.'), { status: 401 });
+        }
+        if (!process.env.FAL_KEY) throw Object.assign(new Error('Provider video belum dikonfigurasi oleh administrator.'), { status: 503 });
+        const jobId = url.searchParams.get('id') || '';
+        if (!/^[A-Za-z0-9_-]{8,200}$/.test(jobId)) throw Object.assign(new Error('ID pekerjaan video tidak valid.'), { status: 400 });
+        const base = 'https://queue.fal.run/fal-ai/kling-video/v2.1/standard/text-to-video/requests/' + encodeURIComponent(jobId);
+        const statusResponse = await fetch(base + '/status', { headers: { Authorization: 'Key ' + process.env.FAL_KEY } });
+        const statusData = await statusResponse.json().catch(() => ({}));
+        if (!statusResponse.ok) throw Object.assign(new Error('Status pekerjaan video belum dapat diambil.'), { status: 502 });
+        if (statusData.status === 'COMPLETED') {
+          const resultResponse = await fetch(base, { headers: { Authorization: 'Key ' + process.env.FAL_KEY } });
+          const resultData = await resultResponse.json().catch(() => ({}));
+          if (!resultResponse.ok || typeof resultData?.video?.url !== 'string') throw Object.assign(new Error('Hasil video belum tersedia dari penyedia.'), { status: 502 });
+          return json({ status: 'COMPLETED', videoUrl: resultData.video.url }, 200, { ...headers, 'X-Request-Id': requestId });
+        }
+        if (statusData.status === 'FAILED') return json({ status: 'FAILED' }, 200, { ...headers, 'X-Request-Id': requestId });
+        return json({ status: statusData.status || 'IN_PROGRESS' }, 200, { ...headers, 'X-Request-Id': requestId });
+      }
+
       const identity = await authenticate(request);
       if (request.method === 'GET' && url.pathname === '/api/organizations') {
         const result = await pool.query(`SELECT o.id, o.name, o.slug, m.role FROM public.user_profiles p
