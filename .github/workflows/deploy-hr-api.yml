@@ -49,6 +49,9 @@ jobs:
       - name: Deploy to development, verify, then promote to production
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          AI_STUDIO_ACCESS_CODE: ${{ secrets.AI_STUDIO_ACCESS_CODE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$NEON_API_KEY" ]; then
@@ -61,7 +64,7 @@ jobs:
             ORIGINS="$3"
             AUTH_BASE="$4"
             AUTH_JWKS="$5"
-            ENV_JSON=$(jq -cn --arg origins "$ORIGINS" --arg auth_base "$AUTH_BASE" --arg auth_jwks "$AUTH_JWKS" --arg branch "$BRANCH_NAME" '{ALLOWED_ORIGINS:$origins,NEON_AUTH_BASE_URL:$auth_base,NEON_AUTH_JWKS_URL:$auth_jwks,NEON_BRANCH:$branch}')
+            ENV_JSON=$(jq -cn --arg origins "$ORIGINS" --arg auth_base "$AUTH_BASE" --arg auth_jwks "$AUTH_JWKS" --arg branch "$BRANCH_NAME" --arg ai_code "$AI_STUDIO_ACCESS_CODE" --arg openai_key "$OPENAI_API_KEY" --arg fal_key "$FAL_KEY" '{ALLOWED_ORIGINS:$origins,NEON_AUTH_BASE_URL:$auth_base,NEON_AUTH_JWKS_URL:$auth_jwks,NEON_BRANCH:$branch,AI_STUDIO_ACCESS_CODE:$ai_code,OPENAI_API_KEY:$openai_key,FAL_KEY:$fal_key}')
             curl --fail-with-body --silent --show-error --output /dev/null \
               -X POST \
               -H "Authorization: Bearer $NEON_API_KEY" \
