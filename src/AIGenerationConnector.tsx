@@ -22,11 +22,12 @@ export default function AIGenerationConnector({ mode, prompt, projectName }: Pro
       const response = await fetch(API_BASE + '/api/health')
       if (!response.ok) throw new Error('Health check gagal')
       const health = await response.json() as Health
-      const configured = Boolean(health.accessConfigured && (health.imageConfigured || health.videoConfigured))
-      setStatus(configured ? 'ready' : 'missing')
-      setStatusText(health.imageConfigured || health.videoConfigured
-        ? 'Backend aktif · Gambar ' + (health.imageConfigured ? 'siap' : 'belum diatur') + ' · Video ' + (health.videoConfigured ? 'siap' : 'belum diatur')
-        : 'Backend aktif, tetapi secret penyedia AI belum dikonfigurasi.')
+      setStatus('ready')
+      setStatusText(!health.accessConfigured
+        ? 'Backend aktif, tetapi kode akses Studio AI belum dikonfigurasi di server.'
+        : (health.imageConfigured || health.videoConfigured)
+          ? 'Backend aktif · Gambar ' + (health.imageConfigured ? 'siap' : 'belum diatur') + ' · Video ' + (health.videoConfigured ? 'siap' : 'belum diatur')
+          : 'Backend aktif, tetapi secret penyedia AI belum dikonfigurasi.')
     } catch {
       setStatus('error'); setStatusText('Backend AI tidak dapat dijangkau. Periksa URL Worker dan deployment.')
     }
