@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, Download, Image, Film, RefreshCw, Sparkles } from 'lucide-react'
 
-const API_BASE = ((((import.meta as unknown as { env?: { VITE_AI_API_URL?: string } }).env?.VITE_AI_API_URL) || 'https://nusa-design-ai-api.dwahyudi8377.workers.dev')).replace(/\/$/, '')
+const API_BASE = (((import.meta as unknown as { env?: { VITE_AI_API_URL?: string; VITE_HR_API_BASE_URL?: string } }).env?.VITE_AI_API_URL) || (import.meta as unknown as { env?: { VITE_HR_API_BASE_URL?: string } }).env?.VITE_HR_API_BASE_URL || 'https://br-wispy-feather-b4t2xxmn-hrapi.compute.c-6.us-east-2.aws.neon.tech').replace(/\/$/, '')
 type Props = { mode: string; prompt: string; projectName: string }
 type Health = { imageConfigured?: boolean; videoConfigured?: boolean; accessConfigured?: boolean }
 type Generation = { error?: string; imageData?: string; imageUrl?: string; requestId?: string; status?: string; videoUrl?: string; revisedPrompt?: string }
