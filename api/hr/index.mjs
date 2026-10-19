@@ -32,7 +32,7 @@ async function authenticate(request) {
   if (!/^Bearer\s+\S+$/i.test(header)) throw Object.assign(new Error('Sesi login diperlukan.'), { status: 401 });
   try {
     // Neon Managed Auth may issue JWTs whose issuer claim differs from the configured auth base URL. The JWKS URL is branch-specific, so verify the signature and standard time claims against that trusted key set; do not hard-fail solely on issuer string formatting.
-    const { payload } = await jwtVerify(header.replace(/^Bearer\\s+/i, ''), jwks);
+    const { payload } = await jwtVerify(header.replace(/^Bearer\s+/i, ''), jwks);
     if (typeof payload.sub !== 'string' || !payload.sub) throw new Error('Missing subject');
     return payload;
   } catch {
