@@ -17,6 +17,31 @@ test('health endpoint returns a non-sensitive service status', async () => {
   assert.ok(body.meta.requestId);
 });
 
+test('AI Studio health reports server-side provider configuration without exposing secrets', async () => {
+  delete process.env.OPENAI_API_KEY;
+  delete process.env.FAL_KEY;
+  delete process.env.AI_STUDIO_ACCESS_CODE;
+  const response = await handler.fetch(new Request('https://local.test/api/health'));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.imageConfigured, false);
+  assert.equal(body.videoConfigured, false);
+  assert.equal(body.accessConfigured, false);
+  assert.equal(JSON.stringify(body).includes('OPENAI_API_KEY'), false);
+});
+
+test('AI Studio generation rejects requests without the server-configured access code', async () => {
+  delete process.env.AI_STUDIO_ACCESS_CODE;
+  const response = await handler.fetch(new Request('https://local.test/api/generate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-ai-studio-code': 'not-a-valid-code' },
+    body: JSON.stringify({ mode: 'concept', prompt: 'Test brief' })
+  }));
+  assert.equal(response.status, 401);
+  const body = await response.json();
+  assert.match(body.error.message, /Kode akses Studio AI/);
+});
+
 test('all protected organization, project, task, and HR routes reject missing bearer tokens', async () => {
   const paths = [
     '/api/organizations',
