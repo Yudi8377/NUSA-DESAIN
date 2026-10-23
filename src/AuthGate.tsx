@@ -28,17 +28,16 @@ export default function AuthGate() {
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
 
-    // Neon Auth 0.6.0-beta in this project calls /get-jwt-token when using
-    // getJWTToken(). The configured Managed Auth endpoint returns 404 there.
-    // The supported React adapter attaches the Neon JWT to session.token
-    // from the set-auth-jwt response header, so read it from getSession().
-    const result = await authClient.getSession()
-    if (result?.error) throw new Error(result.error.message || 'Gagal membaca sesi Neon Auth.')
+    // Managed Neon Auth's default client exposes the short-lived application
+    // JWT through token() -> { data: { token } }. getSession() returns the
+    // Better Auth user/session shape and does not reliably include this JWT.
+    const result = await authClient.token()
+    if (result?.error) throw new Error(result.error.message || 'Gagal mengambil token Neon Auth.')
 
-    const token = result?.data?.session?.token
+    const token = result?.data?.token
     if (typeof token === 'string' && token.split('.').length === 3) return token
 
-    throw new Error('Sesi Neon Auth ditemukan, tetapi respons getSession tidak berisi JWT pada session.token. Perlu pemeriksaan respons sesi dari Neon Auth.')
+    throw new Error('Login berhasil, tetapi Neon Auth tidak mengembalikan JWT aplikasi. Muat ulang halaman dan coba lagi.')
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
