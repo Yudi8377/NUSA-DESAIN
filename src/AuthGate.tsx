@@ -61,10 +61,11 @@ export default function AuthGate() {
     const rows = await apiRequest('/api/organizations', token) as Organization[]
     setOrganizations(rows)
     if (!rows.length) { setPhase('workspace'); return }
-    setOrganizationId(rows[0].id)
-    setTrialExpiresAt(rows[0].trial_expires_at)
-    configureHrApi(getToken, rows[0].id)
-    if (!rows[0].trial_expires_at || Date.parse(rows[0].trial_expires_at) <= Date.now()) {
+    const activeOrg = rows.find(org => org.trial_expires_at && Date.parse(org.trial_expires_at) > Date.now()) || rows[0]
+    setOrganizationId(activeOrg.id)
+    setTrialExpiresAt(activeOrg.trial_expires_at)
+    configureHrApi(getToken, activeOrg.id)
+    if (!activeOrg.trial_expires_at || Date.parse(activeOrg.trial_expires_at) <= Date.now()) {
       setPhase('trial-expired')
       return
     }
