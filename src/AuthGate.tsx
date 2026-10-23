@@ -28,16 +28,38 @@ export default function AuthGate() {
   const getToken = useCallback(async () => {
     if (!authClient) throw new Error('Klien Neon Auth belum dikonfigurasi.')
 
-    // Managed Neon Auth's default client exposes the short-lived application
-    // JWT through token() -> { data: { token } }. getSession() returns the
-    // Better Auth user/session shape and does not reliably include this JWT.
-    const result = await authClient.token()
-    if (result?.error) throw new Error(result.error.message || 'Gagal mengambil token Neon Auth.')
+    const isJwt = (value: unknown): value is string =>
+      typeof value === 'string' && value.split('.').length === 3
 
-    const token = result?.data?.token
-    if (typeof token === 'string' && token.split('.').length === 3) return token
+    // Prefer the SDK. Some SDK builds can return a cached session-shaped
+    // result here instead of the token response, so fall back to the managed
+    // Neon Auth GET /token endpoint using the existing HttpOnly session cookie.
+    try {
+      const result = await authClient.token()
+      if (result?.error) throw new Error(result.error.message || 'Token SDK tidak tersedia.')
+      const token = result?.data?.token ?? result?.data?.session?.access_token
+      if (isJwt(token)) return token
+    } catch {
+      // Continue to the canonical endpoint below; never log or expose tokens.
+    }
 
-    throw new Error('Login berhasil, tetapi Neon Auth tidak mengembalikan JWT aplikasi. Muat ulang halaman dan coba lagi.')
+    const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim().replace(/\\/$/, '')
+    if (!authUrl) throw new Error('URL Neon Auth belum dikonfigurasi.')
+
+    const response = await fetch(`${authUrl}/token`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    })
+    const body = await response.json().catch(() => null) as any
+    const token = body?.token ?? body?.data?.token
+    if (response.ok && isJwt(token)) return token
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Sesi Neon Auth tidak dapat menerbitkan JWT. Keluar lalu masuk kembali; jika berulang, periksa konfigurasi Auth pada branch production.')
+    }
+    throw new Error('Login berhasil, tetapi endpoint token Neon Auth belum mengembalikan JWT yang valid. Periksa URL Auth dan respons /token.')
   }, [])
 
   const apiRequest = useCallback(async (path: string, token: string, init: RequestInit = {}) => {
