@@ -5,8 +5,8 @@ import { authClient, isAuthConfigured } from './auth-client'
 import { configureHrApi } from './services/hrApi'
 import './auth.css'
 
-type Organization = { id: string; name: string; slug: string; role: string }
-type Phase = 'loading' | 'demo' | 'signed-out' | 'workspace' | 'ready' | 'error'
+type Organization = { id: string; name: string; slug: string; role: string; trial_started_at: string; trial_expires_at: string }
+type Phase = 'loading' | 'demo' | 'signed-out' | 'workspace' | 'ready' | 'trial-expired' | 'error'
 
 const apiBase = import.meta.env.VITE_HR_API_BASE_URL?.trim().replace(/\/$/, '')
 
@@ -18,6 +18,7 @@ export default function AuthGate() {
   const [workspaceName, setWorkspaceName] = useState('')
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [organizationId, setOrganizationId] = useState('')
+  const [trialExpiresAt, setTrialExpiresAt] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
@@ -61,7 +62,12 @@ export default function AuthGate() {
     setOrganizations(rows)
     if (!rows.length) { setPhase('workspace'); return }
     setOrganizationId(rows[0].id)
+    setTrialExpiresAt(rows[0].trial_expires_at)
     configureHrApi(getToken, rows[0].id)
+    if (!rows[0].trial_expires_at || Date.parse(rows[0].trial_expires_at) <= Date.now()) {
+      setPhase('trial-expired')
+      return
+    }
     setPhase('ready')
   }, [apiRequest, getToken])
 
@@ -135,7 +141,7 @@ export default function AuthGate() {
     try {
       const token = await getToken()
       const created = await apiRequest('/api/organizations', token, { method: 'POST', body: JSON.stringify({ name: workspaceName.trim() }) }) as Organization
-      setOrganizations([created]); setOrganizationId(created.id); configureHrApi(getToken, created.id); setPhase('ready')
+      setOrganizations([created]); setOrganizationId(created.id); setTrialExpiresAt(created.trial_expires_at); configureHrApi(getToken, created.id); setPhase('ready')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Workspace gagal dibuat.')
     } finally { setBusy(false) }
@@ -144,13 +150,14 @@ export default function AuthGate() {
   const signOut = async () => {
     setBusy(true)
     try { await authClient?.signOut() } finally {
-      configureHrApi(null, null); setOrganizations([]); setOrganizationId(''); setMessage(''); setPhase('signed-out'); setBusy(false)
+      configureHrApi(null, null); setOrganizations([]); setOrganizationId(''); setTrialExpiresAt(null); setMessage(''); setPhase('signed-out'); setBusy(false)
     }
   }
 
   if (phase === 'demo') return <><div className="demo-mode-banner"><b>MODE DEMO</b><span>Autentikasi dan API belum dikonfigurasi. Data pada dashboard masih ilustrasi, bukan data perusahaan.</span></div><App key={organizationId} /></>
   if (phase === 'loading') return <main className="auth-screen"><div className="auth-card"><div className="auth-brand-mark">ND</div><h1>Menyiapkan ruang kerja</h1><p>Memeriksa sesi dan konfigurasi keamanan NUSA DESIGN…</p></div></main>
-  if (phase === 'ready') return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><label>Ganti workspace <select value={organizationId} onChange={e => { setOrganizationId(e.target.value); configureHrApi(getToken, e.target.value) }}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></>
+  if (phase === 'trial-expired') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">MASA UJI COBA SELESAI</div><h1>Trial NUSA DESIGN telah berakhir</h1><p>Masa uji coba 14 hari untuk workspace ini sudah berakhir. Akses data melalui API dihentikan sampai paket komersial diaktifkan.</p><button className="auth-primary" onClick={() => void signOut()} disabled={busy}>{busy ? 'Memproses…' : 'Keluar dari akun'}</button><small className="auth-privacy">Tidak ada pembayaran otomatis yang dilakukan oleh aplikasi.</small></section></main>
+  if (phase === 'ready') { const daysLeft = trialExpiresAt ? Math.max(0, Math.ceil((Date.parse(trialExpiresAt) - Date.now()) / 86400000)) : 0; return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><span className="trial-status" role="status">Trial {daysLeft} hari tersisa</span><label>Ganti workspace <select value={organizationId} onChange={e => { const next = organizations.find(org => org.id === e.target.value); setOrganizationId(e.target.value); setTrialExpiresAt(next?.trial_expires_at || null); configureHrApi(getToken, e.target.value); if (next?.trial_expires_at && Date.parse(next.trial_expires_at) <= Date.now()) setPhase('trial-expired') }}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></> }
   if (phase === 'workspace') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">LANGKAH AWAL</div><h1>Buat workspace perusahaan</h1><p>Workspace memisahkan data proyek dan SDM berdasarkan organisasi. Anda akan menjadi pemilik workspace ini.</p><form onSubmit={createWorkspace}><label>Nama perusahaan atau studio<input required maxLength={120} value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder="Contoh: Nusa Design Studio" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Membuat workspace…' : 'Buat workspace'}</button></form><button className="auth-link" onClick={() => void signOut()}>Keluar dari akun</button></section></main>
   if (phase === 'error') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">SESI PERLU DIPERBARUI</div><h1>Workspace belum dapat dibuka</h1><p>{message || 'Layanan belum siap.'}</p><button className="auth-primary" onClick={() => void signOut()} disabled={busy}>{busy ? 'Memperbarui sesi…' : 'Keluar dan masuk kembali'}</button><button className="auth-secondary" onClick={() => window.location.reload()} disabled={busy}>Coba lagi</button></section></main>
   return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · PROJECT INTELLIGENCE</div>
