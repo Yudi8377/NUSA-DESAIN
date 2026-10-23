@@ -43,7 +43,7 @@ export default function AuthGate() {
       // Continue to the canonical endpoint below; never log or expose tokens.
     }
 
-    const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim().replace(/\\/$/, '')
+    const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim().replace(/\/$/, '')
     if (!authUrl) throw new Error('URL Neon Auth belum dikonfigurasi.')
 
     const response = await fetch(`${authUrl}/token`, {
