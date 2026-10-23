@@ -20,7 +20,7 @@ export default function AuthGate() {
   const [organizationId, setOrganizationId] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(() => new URLSearchParams(window.location.search).has('register'))
   const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [isResetPassword, setIsResetPassword] = useState(() => new URLSearchParams(window.location.search).has('token'))
   const [showPassword, setShowPassword] = useState(false)
@@ -73,7 +73,7 @@ export default function AuthGate() {
         const result = await authClient.getSession()
         if (result?.error) throw new Error(result.error.message || 'Gagal memeriksa sesi.')
         const session = result?.data?.user || result?.data?.session?.user
-        if (!session) { if (active) setPhase('signed-out'); return }
+        if (!session) { if (active) setPhase(new URLSearchParams(window.location.search).has('register') || new URLSearchParams(window.location.search).has('token') ? 'signed-out' : 'demo'); return }
         await loadWorkspace()
       } catch (error) {
         if (active) { setPhase('error'); setMessage(error instanceof Error ? error.message : 'Gagal memuat sesi.') }
@@ -148,13 +148,13 @@ export default function AuthGate() {
     }
   }
 
-  if (phase === 'demo') return <><div className="demo-mode-banner"><b>MODE DEMO</b><span>Autentikasi dan API belum dikonfigurasi. Data pada dashboard masih ilustrasi, bukan data perusahaan.</span></div><App key={organizationId} /></>
+  if (phase === 'demo') return <><div className="demo-mode-banner"><b>TRIAL GRATIS 14 HARI</b><span>Anda langsung masuk ke dashboard pratinjau. Data masih ilustrasi; masa trial workspace resmi dimulai setelah akun dan workspace dibuat.</span><a href={window.location.pathname + '?register'} style={{whiteSpace:'nowrap',fontWeight:800,color:'inherit'}}>Aktifkan trial &amp; buat workspace →</a></div><App key={organizationId} /></>
   if (phase === 'loading') return <main className="auth-screen"><div className="auth-card"><div className="auth-brand-mark">ND</div><h1>Menyiapkan ruang kerja</h1><p>Memeriksa sesi dan konfigurasi keamanan NUSA DESIGN…</p></div></main>
   if (phase === 'ready') return <><div className="workspace-session-bar"><span>Workspace aktif: <b>{organizations.find(x => x.id === organizationId)?.name || 'NUSA DESIGN'}</b></span><label>Ganti workspace <select value={organizationId} onChange={e => { setOrganizationId(e.target.value); configureHrApi(getToken, e.target.value) }}>{organizations.map(org => <option key={org.id} value={org.id}>{org.name} · {org.role}</option>)}</select></label><button onClick={() => void signOut()} disabled={busy}>Keluar</button></div><App /></>
   if (phase === 'workspace') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">LANGKAH AWAL</div><h1>Buat workspace perusahaan</h1><p>Workspace memisahkan data proyek dan SDM berdasarkan organisasi. Anda akan menjadi pemilik workspace ini.</p><form onSubmit={createWorkspace}><label>Nama perusahaan atau studio<input required maxLength={120} value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder="Contoh: Nusa Design Studio" /></label>{message && <div className="auth-message">{message}</div>}<button className="auth-primary" disabled={busy}>{busy ? 'Membuat workspace…' : 'Buat workspace'}</button></form><button className="auth-link" onClick={() => void signOut()}>Keluar dari akun</button></section></main>
   if (phase === 'error') return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">SESI PERLU DIPERBARUI</div><h1>Workspace belum dapat dibuka</h1><p>{message || 'Layanan belum siap.'}</p><button className="auth-primary" onClick={() => void signOut()} disabled={busy}>{busy ? 'Memperbarui sesi…' : 'Keluar dan masuk kembali'}</button><button className="auth-secondary" onClick={() => window.location.reload()} disabled={busy}>Coba lagi</button></section></main>
   // Temporary public maintenance gate: keep the sign-in flow available at ?login while the 404 issue is investigated.
-  if (!new URLSearchParams(window.location.search).has('login') && !isResetPassword) return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · PEMELIHARAAN SEMENTARA</div><h1>Akses sedang disiapkan</h1><p>NUSA DESIGN sedang menjalani pemeriksaan teknis. Halaman masuk disembunyikan sementara selama perbaikan berlangsung.</p><a className="auth-primary" href={window.location.pathname + '?login'} style={{display:'block',textAlign:'center',textDecoration:'none'}}>Masuk (akses sementara)</a></section></main>
+  if (!new URLSearchParams(window.location.search).has('register') && !isResetPassword) return <main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · AKTIVASI TRIAL</div><h1>Aktifkan trial workspace</h1><p>Buat akun dan workspace untuk memulai masa trial resmi 14 hari. Dashboard pratinjau tetap bisa dibuka tanpa login.</p><a className="auth-primary" href={window.location.pathname + '?register'} style={{display:'block',textAlign:'center',textDecoration:'none'}}>Buat akun &amp; aktifkan trial</a></section></main>
   return <><aside className="trial-public-badge" role="note" aria-label="Informasi trial gratis 14 hari"><strong>TRIAL GRATIS 14 HARI</strong><span>Aktif saat workspace dibuat</span></aside><main className="auth-screen"><section className="auth-card"><div className="auth-brand-mark">ND</div><div className="auth-eyebrow">NUSA DESIGN · PROJECT INTELLIGENCE</div>
     <h1>{isResetPassword ? 'Buat kata sandi baru' : isForgotPassword ? 'Lupa kata sandi?' : isSignUp ? 'Buat akun Anda' : 'Selamat datang kembali'}</h1>
     <p>{isResetPassword ? 'Masukkan kata sandi baru untuk akun NUSA DESIGN Anda.' : isForgotPassword ? 'Masukkan email akun Anda untuk menerima tautan reset kata sandi.' : 'Masuk ke ruang kerja arsitektur, konstruksi, anggaran, dokumen, dan tim proyek Anda.'}</p>
