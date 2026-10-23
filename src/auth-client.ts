@@ -3,8 +3,8 @@ import { BetterAuthReactAdapter } from '@neondatabase/auth/react/adapters'
 
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL?.trim()
 
-// Neon’s React adapter injects the JWT returned by Managed Auth into the
-// session and exposes getJWTToken(). Keep this adapter for the browser app.
+// Keep Neon's managed React adapter for session handling and JWT support.
+// Protected API requests use authClient.token() -> data.token (see AuthGate).
 export const authClient: any = authUrl
   ? createAuthClient(authUrl, {
       adapter: BetterAuthReactAdapter(),
