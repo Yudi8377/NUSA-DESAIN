@@ -1,12 +1,12 @@
 -- NUSA DESIGN: 14-day organization trial entitlements.
--- Existing workspaces retain a trial window anchored to their original creation date.
+-- Existing workspaces receive one 14-day trial window when this migration is first applied.
 BEGIN;
 ALTER TABLE public.organizations
   ADD COLUMN IF NOT EXISTS trial_started_at timestamptz,
   ADD COLUMN IF NOT EXISTS trial_expires_at timestamptz;
 UPDATE public.organizations
-SET trial_started_at = COALESCE(trial_started_at, created_at),
-    trial_expires_at = COALESCE(trial_expires_at, created_at + interval '14 days')
+SET trial_started_at = COALESCE(trial_started_at, now()),
+    trial_expires_at = COALESCE(trial_expires_at, now() + interval '14 days')
 WHERE trial_started_at IS NULL OR trial_expires_at IS NULL;
 ALTER TABLE public.organizations
   ALTER COLUMN trial_started_at SET DEFAULT now(),
