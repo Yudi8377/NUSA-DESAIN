@@ -46,3 +46,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify live frontend and production API
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          API_URL: https://br-wispy-feather-b4t2xxmn-hrapi.compute.c-6.us-east-2.aws.neon.tech
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 12 --retry-all-errors --retry-delay 5 "$SITE_URL" -o /tmp/nusa-design.html
+          grep -q 'id="root"' /tmp/nusa-design.html
+          grep -q '/NUSA-DESAIN/assets/' /tmp/nusa-design.html
+          curl --fail --silent --show-error "$API_URL/health" | jq -e '.data.status == "ok" and .data.service == "nusa-design-api"'
+          curl --fail --silent --show-error "$API_URL/ready" | jq -e '.data.status == "ready" and .data.service == "nusa-design-api"'
+          echo "Live Pages and production API health/readiness checks passed."
