@@ -62,6 +62,11 @@ async function withIdentity(payload, orgId, work, roles = ['owner','admin','hr',
     if (!membership.rowCount) throw Object.assign(new Error('Anda tidak memiliki akses ke workspace ini.'), { status: 403 });
     const role = membership.rows[0].role;
     if (roles.length && !roles.includes(role)) throw Object.assign(new Error('Peran akun tidak diizinkan untuk tindakan ini.'), { status: 403 });
+    const trial = await client.query('SELECT trial_expires_at FROM public.organizations WHERE id = $1 FOR SHARE', [orgId]);
+    if (!trial.rowCount || !trial.rows[0].trial_expires_at) throw Object.assign(new Error('Status trial workspace belum tersedia. Hubungi administrator.'), { status: 503 });
+    if (new Date(trial.rows[0].trial_expires_at).getTime() <= Date.now()) {
+      throw Object.assign(new Error('Masa trial 14 hari telah berakhir. Hubungi NUSA DESIGN untuk mengaktifkan paket komersial.'), { status: 402, code: 'TRIAL_EXPIRED' });
+    }
     await client.query("SELECT set_config('app.user_id', $1, true), set_config('app.organization_id', $2, true)", [userId, orgId]);
     const result = await work(client, { userId, orgId, role });
     await client.query('COMMIT');
@@ -113,7 +118,7 @@ export default {
           const userId = profile.rows[0].id;
           const slugBase = orgName.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 45) || 'workspace';
           const slug = `${slugBase}-${randomUUID().slice(0, 8)}`;
-          const org = await client.query('INSERT INTO public.organizations (name, slug) VALUES ($1,$2) RETURNING id, name, slug', [orgName, slug]);
+          const org = await client.query('INSERT INTO public.organizations (name, slug) VALUES ($1,$2) RETURNING id, name, slug, trial_started_at, trial_expires_at', [orgName, slug]);
           await client.query("INSERT INTO public.organization_members (organization_id, user_id, role) VALUES ($1,$2,'owner')", [org.rows[0].id, userId]);
           await client.query('INSERT INTO public.audit_events (organization_id, actor_user_id, action, entity_type, entity_id, details) VALUES ($1,$2,$3,$4,$5,$6::jsonb)', [org.rows[0].id, userId, 'organization.created', 'organization', org.rows[0].id, JSON.stringify({ slug })]);
           await client.query('COMMIT');
@@ -197,7 +202,7 @@ export default {
 
       const identity = await authenticate(request);
       if (request.method === 'GET' && url.pathname === '/api/organizations') {
-        const result = await pool.query(`SELECT o.id, o.name, o.slug, m.role FROM public.user_profiles p
+        const result = await pool.query(`SELECT o.id, o.name, o.slug, o.trial_started_at, o.trial_expires_at, m.role FROM public.user_profiles p
           JOIN public.organization_members m ON m.user_id = p.id JOIN public.organizations o ON o.id = m.organization_id
           WHERE p.auth_subject = $1 ORDER BY o.created_at ASC`, [identity.sub]);
         return json({ data: result.rows, meta: { requestId } }, 200, { ...headers, 'X-Request-Id': requestId });
